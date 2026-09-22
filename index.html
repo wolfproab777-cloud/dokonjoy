@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toshkent Do'konlari va Navigatsiya</title>
+    
+    <!-- Leaflet CSS va JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Leaflet Routing Machine (Yo'l chizish) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { display: flex; flex-direction: column; height: 100vh; background: #f0f2f5; }
+        
+        #header {
+            background: #ffffff;
+            padding: 12px 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .status-box {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        button {
+            padding: 10px 14px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+        button:active { transform: scale(0.97); }
+
+        .btn-gps { background: #2563eb; color: white; }
+        .btn-search { background: #059669; color: white; }
+
+        #nearest-info {
+            margin-top: 8px;
+            padding: 8px;
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #065f46;
+            display: none;
+        }
+
+        #map { flex: 1; width: 100%; height: 100%; }
+
+        /* Custom Popup Style */
+        .leaflet-popup-content-wrapper { border-radius: 8px; padding: 4px; }
+        .popup-btn {
+            display: block;
+            width: 100%;
+            margin-top: 8px;
+            padding: 6px;
+            background: #10b981;
+            color: white;
+            text-align: center;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div id="header">
+    <div class="status-box" id="status">
+        📍 Joylashuv aniqlanmoqda...
+    </div>
+
+    <div class="controls">
+        <button class="btn-gps" onclick="getUserLocation()">🎯 Mening joyim</button>
+        <button class="btn-search" onclick="loadTashkentShops()">🏪 Do'konlarni yuklash</button>
+    </div>
+
+    <div id="nearest-info"></div>
+</div>
+
+<div id="map"></div>
+
+<script>
+    // Toshkent markazi koordinatasi (Boshlang'ich ko'rinish)
+    let map = L.map('map').setView([41.311081, 69.240562], 14);
+
+    let userMarker = null;
+    let userAccuracyCircle = null;
+    let routingControl = null;
+    let shopMarkersLayer = L.layerGroup().addTo(map);
+
+    let userLat = null;
+    let userLng = null;
+
+    // OpenStreetMap xarita qatlami
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    // Ikki nuqta orasidagi masofani aniq metrlarda hisoblash (Haversine formulasi)
+    function getDistanceInMeters(lat1, lon1, lat2, lon2) {
+        const R = 6371e3;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return Math.round(R * c);
+    }
+
+    // 1. ANIQ LOKATSIYANI ANIQLASH (GPS HIGH ACCURACY)
+    function getUserLocation() {
+        const statusEl = document.getElementById('status');
+        statusEl.innerHTML = "⏳ GPS aniqlanmoqda...";
+
+        if (!navigator.geolocation) {
+            statusEl.innerHTML = "❌ Brauzeringiz geolokatsiyani qo'llab-quvvatlamaydi!";
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                userLat = position.coords.latitude;
+                userLng = position.coords.longitude;
+                const accuracy = Math.round(position.coords.accuracy);
+
+                statusEl.innerHTML = `✅ Aniq joylashuv topildi (Xatolik: ±${accuracy}m)`;
+
+                // Eski markerlarni o'chirish
+                if (userMarker) map.removeLayer(userMarker);
+                if (userAccuracyCircle) map.removeLayer(userAccuracyCircle);
+
+                // Foydalanuvchi joylashuviga borish
+                map.setView([userLat, userLng], 16);
+
+                // Moviy nuqta (Sizning joyingiz)
+                userMarker = L.marker([userLat, userLng]).addTo(map)
+                    .bindPopup("<b>Siz shu yerdasiz!</b>").openPopup();
+
+                // GPS radiusi
+                userAccuracyCircle = L.circle([userLat, userLng], {
+                    radius: accuracy,
+                    color: '#2563eb',
+                    fillColor: '#3b82f6',
+                    fillOpacity: 0.15
+                }).addTo(map);
+
+                // Joylashuv topilishi bilan avtomatik yaqin do'konlarni yuklash
+                loadTashkentShops();
+            },
+            (error) => {
+                let errText = "Lokatsiyani aniqlab bo'lmadi.";
+                if (error.code === 1) errText = "⚠️ Iltimos, telefonda GPS va brauzer ruxsatini yoqing!";
+                else if (error.code === 2) errText = "⚠️ GPS signali yo'qotildi.";
+                statusEl.innerHTML = errText;
+            },
+            {
+                enableHighAccuracy: true, // Haqiqiy GPS chipidan foydalanish
+                timeout: 15000,
+                maximumAge: 0
+            }
+        );
+    }
+
+    // 2. TOSHKENtdagI KATTA VA KICHIK BARCHA MAGAZINLARNI YUKLASH (OVERPASS API)
+    function loadTashkentShops() {
+        const statusEl = document.getElementById('status');
+        const infoEl = document.getElementById('nearest-info');
+
+        if (!userLat || !userLng) {
+            // Agar foydalanuvchi GPS ruxsati bermasa, Toshkent markazi bo'yicha qidiradi
+            const center = map.getCenter();
+            userLat = center.lat;
+            userLng = center.lng;
+        }
+
+        statusEl.innerHTML = "🔍 Toshkent do'konlari izlanmoqda...";
+        shopMarkersLayer.clearLayers();
+
+        // 1.5 km masofadagi barcha turdagi magazinlar (Katta supermarketlar, kichik minimarket va do'konchalar)
+        const overpassQuery = `
+            [out:json];
+            (
+              node["shop"="supermarket"](around:1500, ${userLat}, ${userLng});
+              node["shop"="convenience"](around:1500, ${userLat}, ${userLng});
+              node["shop"="grocery"](around:1500, ${userLat}, ${userLng});
+              node["shop"="kiosk"](around:1500, ${userLat}, ${userLng});
+            );
+            out body;
+        `;
+
+        const apiUrl = "https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(overpassQuery);
+
+        fetch(apiUrl)
+            .then(res => res.json())
+            .then(data => {
+                if (!data.elements || data.elements.length === 0) {
+                    statusEl.innerHTML = "📍 1.5 km atrofida do'konlar topilmadi.";
+                    return;
+                }
+
+                let nearestStore = null;
+                let minDistance = Infinity;
+
+                data.elements.forEach(shop => {
+                    const sLat = shop.lat;
+                    const sLng = shop.lon;
+                    
+                    // Do'kon turi va nomini aniqlash
+                    let shopType = "Kichik do'kon";
+                    if (shop.tags.shop === "supermarket") shopType = "Supermarket (Katta)";
+                    else if (shop.tags.shop === "kiosk") shopType = "Kiosk / Do'koncha";
+
+                    const shopName = shop.tags.name || shopType;
+                    const dist = getDistanceInMeters(userLat, userLng, sLat, sLng);
+
+                    // Marker yaratisht
+                    const marker = L.marker([sLat, sLng]);
+                    marker.bindPopup(`
+                        <b>${shopName}</b><br>
+                        <small>Turi: ${shopType}</small><br>
+                        <b>Masofa:</b> ${dist} metr<br>
+                        <button class="popup-btn" onclick="buildRoute(${sLat}, ${sLng})">🚀 Shu yerga yo'l ko'rsat</button>
+                    `);
+
+                    shopMarkersLayer.addLayer(marker);
+
+                    if (dist < minDistance) {
+                        minDistance = dist;
+                        nearestStore = { name: shopName, lat: sLat, lng: sLng, dist: dist, type: shopType };
+                    }
+                });
+
+                statusEl.innerHTML = `✅ Topilgan do'konlar: ${data.elements.length} ta`;
+
+                if (nearestStore) {
+                    infoEl.style.display = "block";
+                    infoEl.innerHTML = `
+                        <b>Eng yaqin:</b> ${nearestStore.name} (${nearestStore.dist} metr)<br>
+                        <button style="margin-top:5px; width:100%; background:#10b981; color:white;" onclick="buildRoute(${nearestStore.lat}, ${nearestStore.lng})">🗺️ Yo'nalishni ko'rsatish</button>
+                    `;
+                }
+            })
+            .catch(err => {
+                statusEl.innerHTML = "❌ Do'konlarni yuklashda xatolik yuz berdi.";
+            });
+    }
+
+    // 3. YO'LNI CHIZIB NAVIGATSIYA QILISH (ROUTING)
+    function buildRoute(destLat, destLng) {
+        if (routingControl) map.removeControl(routingControl);
+
+        routingControl = L.Routing.control({
+            waypoints: [
+                L.latLng(userLat, userLng),
+                L.latLng(destLat, destLng)
+            ],
+            routeWhileDragging: false,
+            addWaypoints: false,
+            showAlternatives: false,
+            lineOptions: {
+                styles: [{ color: '#2563eb', opacity: 0.8, weight: 6 }]
+            }
+        }).addTo(map);
+    }
+
+    // Ekran yuklanishi bilan GPS so'rash
+    window.onload = getUserLocation;
+</script>
+
+</body>
+</html>
