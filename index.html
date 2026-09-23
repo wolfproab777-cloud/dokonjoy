@@ -189,6 +189,12 @@
             cursor: pointer;
         }
 
+        .auth-status {
+            font-size: 13px;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
         .leaflet-routing-container { display: none !important; }
     </style>
 </head>
@@ -199,16 +205,21 @@
     <div class="login-box">
         <h3 id="login-title" style="margin-top:0; color:#111827;">Tizimga kirish</h3>
         
+        <!-- ReCAPTCHA uchun yashirin konteyner -->
+        <div id="recaptcha-container"></div>
+
         <div id="phone-step">
-            <input type="tel" id="phone-number" placeholder="+998 90 123 45 67">
-            <button onclick="sendSMS()" id="btn-sms">SMS Kod Yuborish</button>
+            <input type="tel" id="phone-number" value="+998" placeholder="+998901234567">
+            <button id="btn-sms">SMS Kod Yuborish</button>
         </div>
         
         <div id="code-step" style="display:none;">
             <p id="code-desc" style="font-size:13px; color:#4b5563;">Raqamingizga kelgan 6 xonali kodni kiriting:</p>
             <input type="number" id="sms-code" placeholder="123456">
-            <button onclick="verifySMS()" id="btn-verify" style="background:#10b981;">Tasdiqlash va Kirish</button>
+            <button id="btn-verify" style="background:#10b981;">Tasdiqlash va Kirish</button>
         </div>
+
+        <p id="auth-status-msg" class="auth-status"></p>
     </div>
 </div>
 
@@ -240,6 +251,102 @@
         <path d="M6.62 10.79a15.053 15.053 0 006.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
     </svg>
 </a>
+
+<!-- Firebase SDK Integration -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { 
+        getAuth, 
+        RecaptchaVerifier, 
+        signInWithPhoneNumber 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyD-NgvjVmYlxRHMysVWfA30SArjDiKG83w",
+        authDomain: "dokonjoylashuuz.firebaseapp.com",
+        projectId: "dokonjoylashuuz",
+        storageBucket: "dokonjoylashuuz.firebasestorage.app",
+        messagingSenderId: "665334102750",
+        appId: "1:665334102750:web:8667baf5e3fefae465e04f",
+        measurementId: "G-REKZHXT75T"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    const btnSms = document.getElementById('btn-sms');
+    const btnVerify = document.getElementById('btn-verify');
+    const authStatus = document.getElementById('auth-status-msg');
+
+    // Keyingi reCAPTCHA obyektini saqlaymiz
+    window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        'size': 'invisible'
+    });
+
+    // SMS yuborish logikasi
+    btnSms.addEventListener('click', async () => {
+        let phone = document.getElementById('phone-number').value.trim();
+
+        if (!phone.startsWith('+998') || phone.length < 13) {
+            authStatus.style.color = "red";
+            authStatus.innerText = currentLang === 'ru' ? "Введите корректный номер!" : "To'g'ri telefon raqam kiriting!";
+            return;
+        }
+
+        authStatus.style.color = "blue";
+        authStatus.innerText = currentLang === 'ru' ? "Отправка SMS..." : "SMS yuborilmoqda...";
+        btnSms.disabled = true;
+
+        try {
+            const appVerifier = window.recaptchaVerifier;
+            const confirmationResult = await signInWithPhoneNumber(auth, phone, appVerifier);
+            window.confirmationResult = confirmationResult;
+
+            authStatus.style.color = "green";
+            authStatus.innerText = currentLang === 'ru' ? "Код отправлен!" : "SMS kodi yuborildi!";
+            document.getElementById('phone-step').style.display = 'none';
+            document.getElementById('code-step').style.display = 'block';
+        } catch (error) {
+            console.error("SMS Error:", error);
+            authStatus.style.color = "red";
+            authStatus.innerText = "Error: " + error.message;
+            btnSms.disabled = false;
+        }
+    });
+
+    // SMS-kodni tekshirish logikasi
+    btnVerify.addEventListener('click', async () => {
+        let code = document.getElementById('sms-code').value.trim();
+
+        if (code.length !== 6) {
+            authStatus.style.color = "red";
+            authStatus.innerText = currentLang === 'ru' ? "Введите 6-значный код!" : "6 xonali kodni kiriting!";
+            return;
+        }
+
+        authStatus.style.color = "blue";
+        authStatus.innerText = currentLang === 'ru' ? "Проверка кода..." : "Kod tekshirilmoqda...";
+
+        try {
+            const result = await window.confirmationResult.confirm(code);
+            const user = result.user;
+
+            authStatus.style.color = "green";
+            authStatus.innerText = currentLang === 'ru' ? "Успешный вход!" : "Muvaffaqiyatli kirdingiz!";
+            
+            localStorage.setItem('isLogged', 'true');
+            setTimeout(() => {
+                document.getElementById('login-modal').style.display = 'none';
+                initMap();
+            }, 500);
+
+        } catch (error) {
+            console.error("Verify Error:", error);
+            authStatus.style.color = "red";
+            authStatus.innerText = currentLang === 'ru' ? "Неверный код!" : "Xato kod kiritildi!";
+        }
+    });
+</script>
 
 <script>
     // 1. TIL SOZLAMALARI
@@ -381,27 +488,7 @@
         getUserLocation();
     }
 
-    // 3. AVTORIZATSIYA VA SMS
-    function sendSMS() {
-        let phone = document.getElementById('phone-number').value;
-        if (phone.length >= 9) {
-            document.getElementById('phone-step').style.display = 'none';
-            document.getElementById('code-step').style.display = 'block';
-        } else {
-            alert(currentLang === 'ru' ? "Введите полный номер телефона!" : "Telefon raqamni to'liq kiriting!");
-        }
-    }
-
-    function verifySMS() {
-        let code = document.getElementById('sms-code').value;
-        if (code.length > 0) {
-            localStorage.setItem('isLogged', 'true');
-            document.getElementById('login-modal').style.display = 'none';
-            initMap();
-        }
-    }
-
-    // 4. GEOLOKATSIYA FUNKSIYALARI
+    // 3. GEOLOKATSIYA FUNKSIYALARI
     function getDistanceInMeters(lat1, lon1, lat2, lon2) {
         const R = 6371e3;
         const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -488,7 +575,7 @@
         );
     }
 
-    // 5. OVERPASS API ORQALI DO'KONLARNI YUKLASH
+    // 4. OVERPASS API ORQALI DO'KONLARNI YUKLASH
     function loadTashkentShops() {
         const statusEl = document.getElementById('status');
         const infoEl = document.getElementById('nearest-info');
@@ -575,14 +662,13 @@
             });
     }
 
-    // 6. MARSHRUT CHIZISH (KAFOLATLANGAN ISHLASH MEXANIZMI ROBUST OSRM)
+    // 5. MARSHRUT CHIZISH
     function buildRoute(destLat, destLng, mode = 'car') {
         if (!userLat || !userLng) {
             alert(currentLang === 'ru' ? "GPS не найден!" : "GPS aniqlanmadi!");
             return;
         }
 
-        // Eskilaridan tozalash
         if (routingControl) {
             map.removeControl(routingControl);
             routingControl = null;
@@ -594,7 +680,6 @@
 
         let lineColor = (mode === 'foot') ? '#10b981' : '#2563eb';
 
-        // Aniq va barqaror ISHLAYDIGAN OpenStreetMap De Serveridan foydalanish
         let serviceUrl = (mode === 'foot') 
             ? 'https://routing.openstreetmap.de/routed-foot/route/v1' 
             : 'https://routing.openstreetmap.de/routed-car/route/v1';
@@ -615,7 +700,6 @@
                 createMarker: function() { return null; }
             }).addTo(map);
 
-            // Agar server javob bermasa, zaxira chiziq tortiladi
             routingControl.on('routingerror', function() {
                 drawFallbackLine(destLat, destLng, lineColor);
             });
@@ -627,7 +711,6 @@
         if(map) map.closePopup();
     }
 
-    // Server bilan muammo bo'lsa, xaritada to'g'ri chiziq chizuvchi ZAXIRA mexanizm
     function drawFallbackLine(destLat, destLng, color) {
         if (fallbackPolyline) map.removeLayer(fallbackPolyline);
         fallbackPolyline = L.polyline([
@@ -638,7 +721,7 @@
         map.fitBounds(fallbackPolyline.getBounds(), { padding: [50, 50] });
     }
 
-    // 7. ZAGRUZKA QILINGANDA ISHGA TUSHISH
+    // 6. ZAGRUZKA QILINGANDA ISHGA TUSHISH
     window.onload = () => {
         changeLang(currentLang);
         if (localStorage.getItem('isLogged') === 'true') {
