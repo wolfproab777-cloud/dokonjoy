@@ -14,58 +14,133 @@
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.min.js"></script>
     
     <style>
-        body, html { margin: 0; padding: 0; font-family: Arial, sans-serif; width: 100%; height: 100%; }
-        #map { width: 100%; height: 100vh; z-index: 1; }
+        body, html { 
+            margin: 0; 
+            padding: 0; 
+            font-family: Arial, sans-serif; 
+            width: 100%; 
+            height: 100%; 
+            overflow: hidden;
+        }
+
+        /* Xarita konteyneri */
+        #map { 
+            width: 100%; 
+            height: 100vh; 
+            z-index: 1; 
+            background-color: #e5e3df; /* Xarita yuklanguncha ko'rinadigan fon */
+        }
         
         /* Tillar paneli */
         .lang-switcher {
-            position: fixed; top: 10px; right: 10px; z-index: 1000;
-            background: white; padding: 5px; border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3); display: flex; gap: 5px;
+            position: fixed; 
+            top: 10px; 
+            right: 10px; 
+            z-index: 1000;
+            background: white; 
+            padding: 4px; 
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25); 
+            display: flex; 
+            gap: 4px;
         }
         .lang-switcher button {
-            border: none; background: #f0f0f0; cursor: pointer; font-size: 14px; 
-            padding: 5px 8px; border-radius: 4px; font-weight: bold; transition: 0.2s;
+            border: none; 
+            background: #f3f4f6; 
+            cursor: pointer; 
+            font-size: 13px; 
+            padding: 6px 10px; 
+            border-radius: 6px; 
+            font-weight: bold; 
+            color: #374151;
+            transition: 0.2s;
         }
-        .lang-switcher button:active { background: #d1d5db; }
+        .lang-switcher button:active { 
+            background: #d1d5db; 
+        }
 
-        /* GPS Status panel */
+        /* GPS Status paneli */
         #status-panel {
-            position: fixed; top: 10px; left: 10px; z-index: 1000;
-            background: white; padding: 8px 12px; border-radius: 6px; 
-            font-size: 12px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            position: fixed; 
+            top: 10px; 
+            left: 10px; 
+            z-index: 1000;
+            background: white; 
+            padding: 8px 12px; 
+            border-radius: 8px; 
+            font-size: 12px; 
+            font-weight: bold; 
+            color: #1f2937;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
         }
 
         /* Operator Call tugmasi */
         .call-btn {
-            position: fixed; bottom: 25px; right: 25px; z-index: 1000;
-            background-color: #2563eb; color: white; border-radius: 50%;
-            width: 60px; height: 60px; display: flex; justify-content: center;
-            align-items: center; text-decoration: none; font-size: 28px;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.5);
+            position: fixed; 
+            bottom: 25px; 
+            right: 20px; 
+            z-index: 1000;
+            background-color: #2563eb; 
+            color: white; 
+            border-radius: 50%;
+            width: 56px; 
+            height: 56px; 
+            display: flex; 
+            justify-content: center;
+            align-items: center; 
+            text-decoration: none; 
+            font-size: 26px;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
         }
 
         /* Login Modal oynasi */
         #login-modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); z-index: 9999; display: flex;
-            justify-content: center; align-items: center;
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75); 
+            z-index: 9999; 
+            display: flex;
+            justify-content: center; 
+            align-items: center;
         }
         .login-box {
-            background: white; padding: 25px; border-radius: 12px;
-            width: 80%; max-width: 320px; text-align: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            background: white; 
+            padding: 24px; 
+            border-radius: 14px;
+            width: 82%; 
+            max-width: 320px; 
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
         }
         .login-box input {
-            width: 90%; padding: 12px; margin: 12px 0; font-size: 16px;
-            border: 1px solid #ccc; border-radius: 8px; outline: none;
+            width: 90%; 
+            padding: 11px; 
+            margin: 12px 0; 
+            font-size: 15px;
+            border: 1px solid #d1d5db; 
+            border-radius: 8px; 
+            outline: none;
+            text-align: center;
         }
         .login-box button {
-            width: 98%; padding: 12px; background: #2563eb; color: white; font-size: 16px;
-            border: none; border-radius: 8px; font-weight: bold; cursor: pointer;
+            width: 98%; 
+            padding: 11px; 
+            background: #2563eb; 
+            color: white; 
+            font-size: 15px;
+            border: none; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            cursor: pointer;
         }
-        
-        .leaflet-routing-container { display: none !important; } /* marshrut yozuvlarini yashirish */
+
+        /* Leaflet marshrut panelining ortiqcha textlarini yashirish */
+        .leaflet-routing-container { 
+            display: none !important; 
+        }
     </style>
 </head>
 <body>
@@ -83,7 +158,7 @@
     <!-- Login va SMS kiritish oynasi -->
     <div id="login-modal">
         <div class="login-box">
-            <h3 id="login-title" style="margin-top:0; color:#1f2937;">Tizimga kirish</h3>
+            <h3 id="login-title" style="margin-top:0; color:#111827;">Tizimga kirish</h3>
             
             <!-- 1-qadam: Raqam -->
             <div id="phone-step">
@@ -93,8 +168,8 @@
             
             <!-- 2-qadam: SMS Kod -->
             <div id="code-step" style="display:none;">
-                <p id="code-desc" style="font-size:14px; color:#4b5563;">Raqamingizga kelgan 6 xonali kodni kiriting:</p>
-                <input type="number" id="sms-code" placeholder="123 456">
+                <p id="code-desc" style="font-size:13px; color:#4b5563;">Raqamingizga kelgan 6 xonali kodni kiriting:</p>
+                <input type="number" id="sms-code" placeholder="123456">
                 <button onclick="verifySMS()" id="btn-verify" style="background:#10b981;">Tasdiqlash va Kirish</button>
             </div>
         </div>
@@ -107,11 +182,11 @@
     <div id="map"></div>
 
     <script>
-        // 1. TIL SOZLAMALARI (O'zbek, Rus, Ingliz)
+        // 1. TIL LUG'ATI
         const dict = {
-            uz: { statusLoad: "📍 Joylashuv aniqlanmoqda...", statusDone: "✅ Joylashuv aniqlandi", login: "Tizimga kirish", btnSms: "SMS Kod Yuborish", codeDesc: "6 xonali kodni kiriting:", btnVerify: "Tasdiqlash va Kirish", car: "🚗 Mashinada", foot: "🚶‍♂️ Piyoda" },
-            ru: { statusLoad: "📍 Поиск локации...", statusDone: "✅ Локация найдена", login: "Вход в систему", btnSms: "Отправить SMS", codeDesc: "Введите 6-значный код:", btnVerify: "Подтвердить", car: "🚗 На авто", foot: "🚶‍♂️ Пешком" },
-            en: { statusLoad: "📍 Finding location...", statusDone: "✅ Location found", login: "Login", btnSms: "Send SMS Code", codeDesc: "Enter 6-digit code:", btnVerify: "Verify & Enter", car: "🚗 By Car", foot: "🚶‍♂️ On Foot" }
+            uz: { statusLoad: "📍 Joylashuv aniqlanmoqda...", statusDone: "✅ Joylashuv aniqlandi", login: "Tizimga kirish", btnSms: "SMS Kod Yuborish", codeDesc: "6 xonali kodni kiriting:", btnVerify: "Tasdiqlash va Kirish", car: "🚗 Mashinada", foot: "🚶‍♂️ Piyoda", myPos: "Siz shu yerdasiz!" },
+            ru: { statusLoad: "📍 Поиск локации...", statusDone: "✅ Локация найдена", login: "Вход в систему", btnSms: "Отправить SMS", codeDesc: "Введите 6-значный код:", btnVerify: "Подтвердить", car: "🚗 На авто", foot: "🚶‍♂️ Пешком", myPos: "Вы здесь!" },
+            en: { statusLoad: "📍 Finding location...", statusDone: "✅ Location found", login: "Login", btnSms: "Send SMS Code", codeDesc: "Enter 6-digit code:", btnVerify: "Verify & Enter", car: "🚗 By Car", foot: "🚶‍♂️ On Foot", myPos: "You are here!" }
         };
 
         let currentLang = localStorage.getItem('appLang') || 'uz';
@@ -120,31 +195,58 @@
             currentLang = lang;
             localStorage.setItem('appLang', lang);
             
-            document.getElementById('login-title').innerText = dict[lang].login;
-            document.getElementById('btn-sms').innerText = dict[lang].btnSms;
-            document.getElementById('code-desc').innerText = dict[lang].codeDesc;
-            document.getElementById('btn-verify').innerText = dict[lang].btnVerify;
-            
-            let statText = document.getElementById('status-panel').innerText;
-            if(statText.includes("📍") || statText.includes("Поиск") || statText.includes("Finding")) {
-                document.getElementById('status-panel').innerText = dict[lang].statusLoad;
-            } else {
-                document.getElementById('status-panel').innerText = dict[lang].statusDone;
-            }
-            loadShopsToMap(); // Til o'zgarganda xaritadagi yozuvlar ham o'zgaradi
-        }
-        changeLang(currentLang);
+            let loginTitle = document.getElementById('login-title');
+            let btnSms = document.getElementById('btn-sms');
+            let codeDesc = document.getElementById('code-desc');
+            let btnVerify = document.getElementById('btn-verify');
 
-        // 2. LOGIN (Avtorizatsiya) LOGIKASI
-        if (localStorage.getItem('isLogged') === 'true') {
-            document.getElementById('login-modal').style.display = 'none';
-            startGPS(); // Agar avval kirgan bo'lsa, to'g'ridan-to'g'ri GPS ni yoqish
+            if(loginTitle) loginTitle.innerText = dict[lang].login;
+            if(btnSms) btnSms.innerText = dict[lang].btnSms;
+            if(codeDesc) codeDesc.innerText = dict[lang].codeDesc;
+            if(btnVerify) btnVerify.innerText = dict[lang].btnVerify;
+
+            if (map) loadShopsToMap();
         }
+
+        // 2. XARITA O'ZGARUVCHILARI
+        let map = null;
+        let userLat = null;
+        let userLng = null;
+        let userMarker = null;
+        let routingControl = null;
+
+        // Xaritani ishga tushirish va kulrang ekranni tuzatish
+        function initMap() {
+            if (!map) {
+                map = L.map('map', { zoomControl: false }).setView([41.2995, 69.2401], 12);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19
+                }).addTo(map);
+                L.control.zoom({ position: 'bottomleft' }).addTo(map);
+            }
+
+            // KULRANG EKRANNI TUZATISH (invalidateSize)
+            setTimeout(() => {
+                map.invalidateSize();
+            }, 300);
+
+            startGPS();
+        }
+
+        // 3. SMS KIRISH LOGIKASI
+        window.addEventListener('load', () => {
+            changeLang(currentLang);
+            
+            if (localStorage.getItem('isLogged') === 'true') {
+                let modal = document.getElementById('login-modal');
+                if(modal) modal.style.display = 'none';
+                initMap();
+            }
+        });
 
         function sendSMS() {
             let phone = document.getElementById('phone-number').value;
-            if(phone.length >= 9) {
-                // Bu yerga kelajakda kiritilgan raqamga SMS jo'natish API si ulanadi
+            if (phone.length >= 9) {
                 document.getElementById('phone-step').style.display = 'none';
                 document.getElementById('code-step').style.display = 'block';
             } else {
@@ -154,66 +256,59 @@
 
         function verifySMS() {
             let code = document.getElementById('sms-code').value;
-            if(code.length > 0) { // Test uchun ixtiyoriy kod qabul qilinadi
+            if (code.length > 0) {
                 localStorage.setItem('isLogged', 'true');
                 document.getElementById('login-modal').style.display = 'none';
-                startGPS(); // Tizimga kirgach xarita va GPS ni ishga tushirish
+                initMap(); // Авторизациядан сўнг хarita o'lchamini qayta hisoblash
             }
         }
 
-        // 3. XARITA VA GPS LOGIKASI
-        let map = L.map('map').setView([41.2995, 69.2401], 12); // Toshkent markazi (Default)
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19
-        }).addTo(map);
-        
-        let userLat = null;
-        let userLng = null;
-        let userMarker = null;
-        let routingControl = null;
-
+        // 4. GPS JOYLASHUV
         function startGPS() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
                         userLat = position.coords.latitude;
                         userLng = position.coords.longitude;
-                        
-                        map.setView([userLat, userLng], 14);
-                        if(userMarker) map.removeLayer(userMarker);
-                        userMarker = L.marker([userLat, userLng]).addTo(map).bindPopup("<b>Siz shu yerdasiz!</b>").openPopup();
-                        
+
+                        if (map) {
+                            map.setView([userLat, userLng], 14);
+                            if (userMarker) map.removeLayer(userMarker);
+                            userMarker = L.marker([userLat, userLng]).addTo(map)
+                                .bindPopup(`<b>${dict[currentLang].myPos}</b>`).openPopup();
+                        }
+
                         document.getElementById('status-panel').innerText = dict[currentLang].statusDone;
                         loadShopsToMap();
                     },
                     (error) => {
-                        console.error("GPS Xatosi: ", error);
-                        document.getElementById('status-panel').innerText = "❌ GPS Ruxsati yo'q";
-                        alert("Iltimos, ilova sozlamalaridan joylashuvga (Location) ruxsat bering!");
-                        loadShopsToMap(); // Joylashuv topilmasa ham do'konlarni ko'rsatish
+                        document.getElementById('status-panel').innerText = "❌ GPS o'chiq";
+                        loadShopsToMap();
                     },
                     { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
                 );
             }
         }
 
-        // 4. DO'KONLAR BAZASI VA MARSHRUT
+        // 5. DO'KONLAR VA MARSHRUT
         const shopsData = [
-            { id: 1, name: "Asosiy Do'kon (Chilonzor)", lat: 41.2753, lng: 69.2066 },
-            { id: 2, name: "Filial 1 (Yunusobod)", lat: 41.3644, lng: 69.2842 },
-            { id: 3, name: "Filial 2 (M.Ulug'bek)", lat: 41.3265, lng: 69.3243 }
+            { id: 1, name: "Chilonzor Do'koni", lat: 41.2753, lng: 69.2066 },
+            { id: 2, name: "Yunusobod Do'koni", lat: 41.3644, lng: 69.2842 },
+            { id: 3, name: "Mirzo Ulug'bek Do'koni", lat: 41.3265, lng: 69.3243 }
         ];
 
         function loadShopsToMap() {
+            if (!map) return;
+            
             shopsData.forEach(shop => {
                 let popupHtml = `
-                    <div style="text-align:center; min-width:120px;">
-                        <h4 style="margin:0 0 10px 0; color:#1e3a8a;">${shop.name}</h4>
+                    <div style="text-align:center; min-width:130px;">
+                        <b style="color:#1e3a8a; font-size:14px;">${shop.name}</b><br><br>
                         <div style="display:flex; flex-direction:column; gap:6px;">
-                            <button onclick="drawRouteToShop(${shop.lat}, ${shop.lng}, 'car')" style="background:#2563eb; color:white; border:none; padding:8px; border-radius:6px; cursor:pointer; font-weight:bold;">
+                            <button onclick="drawRouteToShop(${shop.lat}, ${shop.lng}, 'car')" style="background:#2563eb; color:white; border:none; padding:7px; border-radius:6px; font-weight:bold; cursor:pointer;">
                                 ${dict[currentLang].car}
                             </button>
-                            <button onclick="drawRouteToShop(${shop.lat}, ${shop.lng}, 'foot')" style="background:#10b981; color:white; border:none; padding:8px; border-radius:6px; cursor:pointer; font-weight:bold;">
+                            <button onclick="drawRouteToShop(${shop.lat}, ${shop.lng}, 'foot')" style="background:#10b981; color:white; border:none; padding:7px; border-radius:6px; font-weight:bold; cursor:pointer;">
                                 ${dict[currentLang].foot}
                             </button>
                         </div>
@@ -225,14 +320,12 @@
 
         window.drawRouteToShop = function(destLat, destLng, mode) {
             if (!userLat || !userLng) {
-                alert("GPS aniqlanmagan! Marshrut chizish uchun GPS yoniq bo'lishi kerak.");
+                alert("GPS aniqlanmadi! Mobil qurilmangizda joylashuvni yoqing.");
                 return;
             }
-            
-            if (routingControl) {
-                map.removeControl(routingControl); // Avvalgi marshrutni tozalash
-            }
-            
+
+            if (routingControl) map.removeControl(routingControl);
+
             let profileType = (mode === 'foot') ? 'foot' : 'car';
             let lineColor = (mode === 'foot') ? '#10b981' : '#2563eb';
 
@@ -241,16 +334,12 @@
                     L.latLng(userLat, userLng),
                     L.latLng(destLat, destLng)
                 ],
-                router: L.Routing.osrmv1({
-                    serviceUrl: `https://router.project-osrm.org/route/v1/${profileType}`
-                }),
-                lineOptions: {
-                    styles: [{ color: lineColor, opacity: 0.8, weight: 6 }]
-                },
-                createMarker: function() { return null; } // O'rtadagi ortiqcha belgilarni olib tashlash
+                router: L.Routing.osrmv1({ serviceUrl: `https://router.project-osrm.org/route/v1/${profileType}` }),
+                lineOptions: { styles: [{ color: lineColor, weight: 6, opacity: 0.8 }] },
+                createMarker: function() { return null; }
             }).addTo(map);
-            
-            map.closePopup(); // Marshrut chizilgach popupni yopish
+
+            map.closePopup();
         };
     </script>
 </body>
