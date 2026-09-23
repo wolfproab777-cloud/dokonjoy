@@ -17,16 +17,33 @@
     <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 
     <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-color: #1a1a1a;
+            --sub-text: #4b5563;
+            --border-color: #d1d5db;
+        }
+
+        /* Qorong'i rejim stili */
+        body.dark-mode {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #f3f4f6;
+            --sub-text: #9ca3af;
+            --border-color: #374151;
+        }
+
         * { 
             box-sizing: border-box !important; 
             margin: 0; 
             padding: 0; 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
         }
-        body { display: flex; flex-direction: column; height: 100vh; background: #f0f2f5; position: relative; }
+        body { display: flex; flex-direction: column; height: 100vh; background: var(--bg-color); color: var(--text-color); position: relative; transition: 0.3s; }
         
         #header {
-            background: #ffffff;
+            background: var(--card-bg);
             padding: 12px 16px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             z-index: 1000;
@@ -40,9 +57,9 @@
         }
 
         .status-box {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
-            color: #1a1a1a;
+            color: var(--text-color);
             display: flex;
             align-items: center;
             gap: 8px;
@@ -51,23 +68,20 @@
         .right-tools {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
-        .lang-switcher {
-            display: flex;
-            gap: 4px;
-        }
+        .lang-switcher { display: flex; gap: 4px; }
 
-        .lang-btn {
-            border: 1px solid #d1d5db;
-            background: #f9fafb;
+        .lang-btn, .theme-btn, .settings-btn {
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-color);
             cursor: pointer;
-            font-size: 11px;
-            padding: 4px 8px;
+            font-size: 12px;
+            padding: 5px 8px;
             border-radius: 6px;
             font-weight: bold;
-            color: #374151;
             transition: 0.2s;
         }
 
@@ -75,15 +89,6 @@
             background: #2563eb;
             color: white;
             border-color: #2563eb;
-        }
-
-        .settings-btn {
-            background: #f3f4f6;
-            border: 1px solid #d1d5db;
-            padding: 4px 8px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
         }
 
         .controls {
@@ -109,23 +114,19 @@
         #nearest-info {
             margin-top: 8px;
             padding: 8px;
-            background: #ecfdf5;
-            border: 1px solid #a7f3d0;
+            background: rgba(5, 150, 105, 0.1);
+            border: 1px solid #059669;
             border-radius: 6px;
             font-size: 13px;
-            color: #065f46;
+            color: var(--text-color);
             display: none;
         }
 
         #map { flex: 1; width: 100%; height: 100%; background-color: #e5e3df; }
 
-        .leaflet-popup-content-wrapper { border-radius: 8px; padding: 4px; }
+        .leaflet-popup-content-wrapper { border-radius: 8px; padding: 4px; background: var(--card-bg); color: var(--text-color); }
         
-        .route-btn-container {
-            display: flex;
-            gap: 6px;
-            margin-top: 8px;
-        }
+        .route-btn-container { display: flex; gap: 6px; margin-top: 8px; }
 
         .popup-btn {
             flex: 1;
@@ -145,8 +146,8 @@
             position: fixed;
             bottom: 25px;
             right: 20px;
-            width: 60px;
-            height: 60px;
+            width: 55px;
+            height: 55px;
             background-color: #25d366;
             color: white;
             border-radius: 50%;
@@ -156,12 +157,10 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             text-decoration: none;
             z-index: 2000;
-            transition: transform 0.2s ease;
             animation: pulse 2s infinite;
         }
 
-        .call-operator-btn:active { transform: scale(0.9); }
-        .call-operator-btn svg { width: 28px; height: 28px; fill: white; }
+        .call-operator-btn svg { width: 26px; height: 26px; fill: white; }
 
         @keyframes pulse {
             0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7); }
@@ -181,7 +180,8 @@
             padding: 12px;
         }
         .modal-box {
-            background: white;
+            background: var(--card-bg);
+            color: var(--text-color);
             padding: 20px;
             border-radius: 14px;
             width: 100%;
@@ -199,25 +199,21 @@
             border: none;
             font-size: 18px;
             cursor: pointer;
-            color: #6b7280;
+            color: var(--sub-text);
         }
 
-        .input-form {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: 10px;
-        }
+        .input-form { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
 
         .modal-box input {
             width: 100%;
             padding: 12px 8px;
             font-size: 14px;
-            border: 1px solid #d1d5db;
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             outline: none;
             text-align: center;
-            background: #ffffff;
+            background: var(--bg-color);
+            color: var(--text-color);
         }
         
         .modal-box button.btn-submit {
@@ -232,19 +228,23 @@
             cursor: pointer;
         }
 
-        .auth-status {
-            font-size: 13px;
-            margin-top: 12px;
-            font-weight: 600;
-            word-break: break-word;
+        .auth-status { font-size: 13px; margin-top: 12px; font-weight: 600; word-break: break-word; }
+        .tab-btn-container { display: flex; gap: 8px; margin-bottom: 12px; }
+
+        .tab-btn {
+            flex: 1;
+            padding: 8px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 12px;
+            cursor: pointer;
         }
 
-        #recaptcha-container {
-            margin-top: 8px;
-            display: flex;
-            justify-content: center;
-        }
-
+        .tab-btn.active { background: #2563eb; color: white; }
+        .tg-info-card { background: rgba(37, 99, 235, 0.1); border: 1px solid #2563eb; border-radius: 8px; padding: 10px; margin-bottom: 10px; text-align: left; font-size: 12px; }
         .leaflet-routing-container { display: none !important; }
     </style>
 </head>
@@ -254,42 +254,69 @@
     <div class="modal-box">
         <button type="button" class="close-btn" onclick="closeSettings()">✕</button>
         <h3 id="settings-title" style="margin-bottom: 15px;">⚙️ Sozlamalar</h3>
+
+        <!-- Telegram Profil kartochkasi -->
+        <div id="tg-profile-card" class="tg-info-card" style="display:none;">
+            <b>👤 Telegram Profil:</b> <span id="tg-user-name"></span><br>
+            <b>🏷️ Username:</b> <span id="tg-user-username"></span>
+        </div>
         
         <div id="settings-content">
             <div id="not-logged-in-box">
-                <p style="font-size: 13px; color: #4b5563; margin-bottom: 12px;" id="login-prompt-txt">
+                <p style="font-size: 13px; color: var(--sub-text); margin-bottom: 12px;" id="login-prompt-txt">
                     Tizim imkoniyatlaridan to'liq foydalanish uchun ro'yxatdan o'ting yoki kiring:
                 </p>
-                <button type="button" class="btn-submit" onclick="openAuthModal()">🔐 SMS orqali Kirish</button>
+                <button type="button" class="btn-submit" onclick="openAuthModal()">🔐 Telegram Orqali Kirish</button>
             </div>
 
             <div id="logged-in-box" style="display: none;">
                 <p style="font-size: 14px; color: #059669; font-weight: bold; margin-bottom: 8px;" id="user-status-txt">
                     ✅ Tizimga kirilgansiz
                 </p>
-                <p id="user-phone-disp" style="font-size: 13px; color: #374151; margin-bottom: 15px;"></p>
+                <p id="user-phone-disp" style="font-size: 13px; margin-bottom: 15px;"></p>
+                
+                <button type="button" class="btn-submit" style="background: #059669; margin-bottom: 8px;" onclick="sendLocationToBot()">📍 Joylashuvni Botga Yuborish</button>
                 <button type="button" class="btn-submit" style="background: #dc2626;" onclick="logoutUser()">🚪 Tizimdan chiqish</button>
             </div>
         </div>
     </div>
 </div>
 
+<!-- TELEGRAM & PAROL MODALI -->
 <div id="login-modal" class="modal">
     <div class="modal-box">
         <button type="button" class="close-btn" onclick="closeAuthModal()">✕</button>
-        <h3 style="margin-bottom: 10px;">📱 SMS orqali kirish</h3>
+        
+        <div class="tab-btn-container">
+            <button class="tab-btn active" id="tab-login-btn" onclick="switchTab('login')">Kirish</button>
+            <button class="tab-btn" id="tab-reg-btn" onclick="switchTab('reg')">Ro'yxatdan o'tish</button>
+        </div>
 
-        <div class="input-form">
-            <div id="step-1">
-                <input type="tel" id="reg-phone" value="+998" placeholder="+998901234567" maxlength="13">
-                <div id="recaptcha-container"></div>
-                <button type="button" class="btn-submit" style="margin-top:8px;" onclick="sendSMSCode()">Haqiqiy SMS Yuborish</button>
+        <!-- KIRISH FORMASI -->
+        <div id="form-login" class="input-form">
+            <input type="tel" id="login-phone" placeholder="+998901234567" maxlength="13">
+            <input type="password" id="login-password" placeholder="Parolingizni kiriting">
+            <button type="button" class="btn-submit" onclick="loginWithPassword()">Tizimga Kirish</button>
+        </div>
+
+        <!-- RO'YXATDAN O'TISH FORMASI -->
+        <div id="form-reg" class="input-form" style="display: none;">
+            <div id="reg-step-1">
+                <p style="font-size:12px; color: var(--sub-text); margin-bottom:6px;">
+                    1. Telegram botimizga kiring va kontaktingizni yuboring.
+                </p>
+                <a href="https://t.me/DokonJoylashuSmsUz_bot" target="_blank" style="display:block; margin-bottom:10px; background:#0088cc; color:white; padding:10px; border-radius:8px; text-decoration:none; font-weight:bold; font-size:13px;">
+                    🤖 Telegram Botni Ochish
+                </a>
+                <input type="tel" id="reg-phone" placeholder="+998901234567" maxlength="13">
+                <input type="number" id="reg-code" placeholder="Bot bergan 6 xonali kod" maxlength="6">
+                <button type="button" class="btn-submit" style="margin-top:8px;" onclick="verifyTgCode()">Kodni Tasdiqlash</button>
             </div>
-            
-            <div id="step-2" style="display:none;">
-                <p style="font-size:12px; color:#4b5563; margin-bottom:6px;">SMS orqali kelgan 6 xonali kodni kiriting:</p>
-                <input type="number" id="reg-code" placeholder="123456" maxlength="6">
-                <button type="button" class="btn-submit" style="background:#10b981; margin-top:8px;" onclick="verifySMSCode()">Kodni Tasdiqlash</button>
+
+            <div id="reg-step-2" style="display:none;">
+                <p style="font-size:12px; color:#059669; margin-bottom:6px;">✅ Kod tasdiqlandi! Endi parol o'rnating:</p>
+                <input type="password" id="reg-password" placeholder="Yangi parol o'ylab toping">
+                <button type="button" class="btn-submit" style="background:#10b981; margin-top:8px;" onclick="completeRegistration()">Ro'yxatdan o'tishni yakunlash</button>
             </div>
         </div>
 
@@ -299,10 +326,9 @@
 
 <div id="header">
     <div class="header-top">
-        <div class="status-box" id="status">
-            📍 Joylashuv aniqlanmoqda...
-        </div>
+        <div class="status-box" id="status">📍 Joylashuv aniqlanmoqda...</div>
         <div class="right-tools">
+            <button type="button" class="theme-btn" id="theme-toggle" onclick="toggleTheme()">🌙</button>
             <div class="lang-switcher">
                 <button type="button" class="lang-btn" id="lang-uz" onclick="changeLang('uz')">UZ</button>
                 <button type="button" class="lang-btn" id="lang-ru" onclick="changeLang('ru')">RU</button>
@@ -328,109 +354,145 @@
     </svg>
 </a>
 
-<!-- FIREBASE SDK MODULLARI INTEGRATSIYASI -->
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+<script>
+    let tgUser = null;
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyD-NgvjVmYlxRHMysVWfA30SArjDiKG83w",
-        authDomain: "dokonjoylashuuz.firebaseapp.com",
-        projectId: "dokonjoylashuuz",
-        storageBucket: "dokonjoylashuuz.firebasestorage.app",
-        messagingSenderId: "665334102750",
-        appId: "1:665334102750:web:8667baf5e3fefae465e04f",
-        measurementId: "G-REKZHXT75T"
-    };
+    // Telegram WebApp SDK integratsiyasi
+    if (window.Telegram && window.Telegram.WebApp) {
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+        tgUser = tg.initDataUnsafe?.user;
+        if (tgUser) {
+            document.getElementById('tg-profile-card').style.display = 'block';
+            document.getElementById('tg-user-name').innerText = `${tgUser.first_name || ''} ${tgUser.last_name || ''}`;
+            document.getElementById('tg-user-username').innerText = tgUser.username ? `@${tgUser.username}` : 'Mavjud emas';
 
-    let confirmationResultObj = null;
-
-    window.initRecaptcha = function() {
-        if (!window.recaptchaVerifier) {
-            window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-                'size': 'invisible',
-                'callback': (response) => {}
-            });
+            if (tgUser.phone_number) {
+                let phone = tgUser.phone_number.startsWith('+') ? tgUser.phone_number : '+' + tgUser.phone_number;
+                document.getElementById('login-phone').value = phone;
+                document.getElementById('reg-phone').value = phone;
+            }
         }
-    };
+    }
 
-    window.sendSMSCode = async function() {
+    // Dark/Light Theme rejimini almashish
+    function toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        document.getElementById('theme-toggle').innerText = isDark ? '☀️' : '🌙';
+    }
+
+    if (localStorage.getItem('theme') === 'dark') {
+        document.body.classList.add('dark-mode');
+        document.getElementById('theme-toggle').innerText = '☀️';
+    }
+
+    // Geolokatsiyani Botga Telegram WebApp orqali yuborish
+    function sendLocationToBot() {
+        if (!userLat || !userLng) {
+            alert("Koordinatalar aniqlanmagan!");
+            return;
+        }
+        
+        const locData = `Koordinata: ${userLat}, ${userLng}`;
+        if (window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.sendData(locData);
+            alert("Joylashuv Telegram botga yuborildi!");
+        } else {
+            alert("Ushbu funksiya Telegram WebApp ichida ishlaydi!");
+        }
+    }
+
+    function switchTab(tab) {
+        const msg = document.getElementById('auth-status-msg');
+        msg.innerText = '';
+        if (tab === 'login') {
+            document.getElementById('tab-login-btn').classList.add('active');
+            document.getElementById('tab-reg-btn').classList.remove('active');
+            document.getElementById('form-login').style.display = 'flex';
+            document.getElementById('form-reg').style.display = 'none';
+        } else {
+            document.getElementById('tab-reg-btn').classList.add('active');
+            document.getElementById('tab-login-btn').classList.remove('active');
+            document.getElementById('form-reg').style.display = 'flex';
+            document.getElementById('form-login').style.display = 'none';
+        }
+    }
+
+    function verifyTgCode() {
         const phone = document.getElementById('reg-phone').value.trim();
+        const code = document.getElementById('reg-code').value.trim();
         const msg = document.getElementById('auth-status-msg');
 
         if (phone.length < 13 || !phone.startsWith('+998')) {
             msg.style.color = "red";
-            msg.innerText = "To'g'ri O'zbekiston raqamini kiriting (+998...)";
+            msg.innerText = "To'g'ri raqam kiriting (+998...)";
             return;
         }
-
-        msg.style.color = "#2563eb";
-        msg.innerText = "SMS kod yuborilmoqda, kuting...";
-
-        try {
-            window.initRecaptcha();
-            const appVerifier = window.recaptchaVerifier;
-            const confirmationResult = await signInWithPhoneNumber(auth, phone, appVerifier);
-            confirmationResultObj = confirmationResult;
-            
-            msg.style.color = "green";
-            msg.innerText = "Haqiqiy SMS kod telefoningizga yuborildi!";
-            
-            document.getElementById('step-1').style.display = 'none';
-            document.getElementById('step-2').style.display = 'block';
-        } catch (error) {
-            msg.style.color = "red";
-            msg.innerText = "Xatolik: " + error.message;
-            if (window.recaptchaVerifier && typeof grecaptcha !== 'undefined') {
-                window.recaptchaVerifier.render().then(widgetId => {
-                    grecaptcha.reset(widgetId);
-                });
-            }
-        }
-    };
-
-    window.verifySMSCode = async function() {
-        const code = document.getElementById('reg-code').value.trim();
-        const phone = document.getElementById('reg-phone').value.trim();
-        const msg = document.getElementById('auth-status-msg');
 
         if (!code || code.length < 6) {
             msg.style.color = "red";
-            msg.innerText = "6 xonali SMS kodni kiriting!";
+            msg.innerText = "6 xonali kodni kiriting!";
             return;
         }
 
-        msg.style.color = "#2563eb";
-        msg.innerText = "Kod tekshirilmoqda...";
+        msg.style.color = "green";
+        msg.innerText = "Kod to'g'ri! Endi parol o'rnating.";
+        document.getElementById('reg-step-1').style.display = 'none';
+        document.getElementById('reg-step-2').style.display = 'block';
+    }
 
-        try {
-            const result = await confirmationResultObj.confirm(code);
-            const user = result.user;
+    function completeRegistration() {
+        const phone = document.getElementById('reg-phone').value.trim();
+        const password = document.getElementById('reg-password').value.trim();
+        const msg = document.getElementById('auth-status-msg');
 
+        if (!password || password.length < 4) {
+            msg.style.color = "red";
+            msg.innerText = "Parol kamida 4 xonali bo'lsin!";
+            return;
+        }
+
+        localStorage.setItem('saved_phone', phone);
+        localStorage.setItem('saved_password', password);
+        localStorage.setItem('isLogged', 'true');
+        localStorage.setItem('userPhone', phone);
+
+        msg.style.color = "green";
+        msg.innerText = "Ro'yxatdan muvaffaqiyatli o'tdingiz!";
+
+        setTimeout(() => {
+            closeAuthModal();
+            openSettings();
+        }, 1000);
+    }
+
+    function loginWithPassword() {
+        const phone = document.getElementById('login-phone').value.trim();
+        const password = document.getElementById('login-password').value.trim();
+        const msg = document.getElementById('auth-status-msg');
+
+        const savedPhone = localStorage.getItem('saved_phone');
+        const savedPass = localStorage.getItem('saved_password');
+
+        if (phone === savedPhone && password === savedPass) {
             localStorage.setItem('isLogged', 'true');
             localStorage.setItem('userPhone', phone);
 
             msg.style.color = "green";
-            msg.innerText = "Muvaffaqiyatli kirdingiz!";
-            
+            msg.innerText = "Tizimga kirdingiz!";
+
             setTimeout(() => {
                 closeAuthModal();
+                openSettings();
             }, 800);
-        } catch (error) {
+        } else {
             msg.style.color = "red";
-            msg.innerText = "SMS kod noto'g'ri kiritildi!";
+            msg.innerText = "Raqam yoki parol noto'g'ri!";
         }
-    };
-</script>
-
-<script>
-    // Telegram WebApp Initsializatsiyasi
-    if (window.Telegram && window.Telegram.WebApp) {
-        window.Telegram.WebApp.ready();
-        window.Telegram.WebApp.expand();
     }
 
     function openSettings() {
@@ -456,9 +518,12 @@
     function openAuthModal() {
         closeSettings();
         document.getElementById('login-modal').style.display = 'flex';
-        document.getElementById('step-1').style.display = 'block';
-        document.getElementById('step-2').style.display = 'none';
-        document.getElementById('auth-status-msg').innerText = '';
+        switchTab('login');
+
+        const savedPhone = localStorage.getItem('saved_phone');
+        if(savedPhone) {
+            document.getElementById('login-phone').value = savedPhone;
+        }
     }
 
     function closeAuthModal() {
@@ -468,7 +533,7 @@
     function logoutUser() {
         localStorage.removeItem('isLogged');
         localStorage.removeItem('userPhone');
-        alert(currentLang === 'ru' ? "Вы вышли из системы" : "Tizimdan chiqdingiz!");
+        alert("Tizimdan chiqdingiz!");
         closeSettings();
     }
 
@@ -476,16 +541,16 @@
         uz: {
             statusInit: "📍 Joylashuv aniqlanmoqda...",
             statusGpsLoad: "⏳ GPS aniqlanmoqda...",
-            statusGpsDenied: "⚠️ Iltimos, ilova sozlamalaridan GPS-ga ruxsat bering!",
+            statusGpsDenied: "⚠️ GPS-ga ruxsat bering!",
             statusGpsNoSupp: "❌ Geolokatsiya qo'llab-quvvatlanmaydi!",
-            statusGpsAcc: "✅ Aniq joylashuv topildi (Xatolik: ±{acc}m)",
-            statusGpsWeak: "⚠️ GPS kuchi yetmadi, Internet orqali izlanmoqda...",
+            statusGpsAcc: "✅ Joylashuv topildi (±{acc}m)",
+            statusGpsWeak: "⚠️ GPS kuchi yetmadi...",
             statusGpsApprox: "✅ Taxminiy joylashuv topildi",
-            statusGpsErr: "⚠️ GPS va Internet signali yetarli emas!",
+            statusGpsErr: "⚠️ GPS signali yetarli emas!",
             statusSearching: "🔍 Do'konlar izlanmoqda...",
             statusNotFound: "📍 1.5 km atrofida do'konlar topilmadi.",
             statusFound: "✅ Topilgan do'konlar: {count} ta",
-            statusShopErr: "❌ Do'konlarni yuklashda xatolik yuz berdi.",
+            statusShopErr: "❌ Do'konlarni yuklashda xatolik.",
             btnGps: "🎯 Mening joyim",
             btnSearch: "🏪 Do'konlarni yuklash",
             myPos: "Siz shu yerdasiz!",
@@ -493,50 +558,50 @@
             nearestLabel: "Eng yaqin:",
             car: "🚗 Mashinada",
             foot: "🚶‍♂️ Piyoda",
-            typeSuper: "Supermarket (Katta)",
-            typeKiosk: "Kiosk / Do'koncha",
+            typeSuper: "Supermarket",
+            typeKiosk: "Kiosk",
             typeSmall: "Kichik do'kon",
             settingsTitle: "⚙️ Sozlamalar",
-            loginPrompt: "Tizim imkoniyatlaridan to'liq foydalanish uchun ro'yxatdan o'ting yoki kiring:"
+            loginPrompt: "Tizim imkoniyatlaridan to'liq foydalanish uchun ro'yxatdan o'ting:"
         },
         ru: {
             statusInit: "📍 Определение локации...",
             statusGpsLoad: "⏳ GPS определяет...",
-            statusGpsDenied: "⚠️ Пожалуйста, разрешите GPS в настройках!",
+            statusGpsDenied: "⚠️ Разрешите GPS!",
             statusGpsNoSupp: "❌ Геолокация не поддерживается!",
-            statusGpsAcc: "✅ Локация найдена (Погрешность: ±{acc}м)",
-            statusGpsWeak: "⚠️ Слабый GPS, поиск через Интернет...",
+            statusGpsAcc: "✅ Найдено (±{acc}м)",
+            statusGpsWeak: "⚠️ Слабый GPS...",
             statusGpsApprox: "✅ Найдена примерная локация",
-            statusGpsErr: "⚠️ Недостаточно сигнала GPS или Интернета!",
+            statusGpsErr: "⚠️ Нет сигнала GPS!",
             statusSearching: "🔍 Поиск магазинов...",
-            statusNotFound: "📍 В радиусе 1.5 км магазины не найдены.",
-            statusFound: "✅ Найдено магазинов: {count} шт",
-            statusShopErr: "❌ Ошибка при загрузке магазинов.",
+            statusNotFound: "📍 Магазины не найдены.",
+            statusFound: "✅ Найдено: {count} шт",
+            statusShopErr: "❌ Ошибка загрузки.",
             btnGps: "🎯 Моё местоположение",
             btnSearch: "🏪 Загрузить магазины",
             myPos: "Вы здесь!",
-            myPosApprox: "Примерное местоположение!",
+            myPosApprox: "Примерная локация!",
             nearestLabel: "Ближайший:",
             car: "🚗 На авто",
             foot: "🚶‍♂️ Пешком",
-            typeSuper: "Супермаркет (Большой)",
-            typeKiosk: "Киоск / Ларек",
-            typeSmall: "Маленький магазин",
+            typeSuper: "Супермаркет",
+            typeKiosk: "Киоск",
+            typeSmall: "Магазин",
             settingsTitle: "⚙️ Настройки",
-            loginPrompt: "Зарегистрируйтесь или войдите, чтобы использовать все возможности:"
+            loginPrompt: "Зарегистрируйтесь для использования:"
         },
         en: {
             statusInit: "📍 Finding location...",
             statusGpsLoad: "⏳ Detecting GPS...",
-            statusGpsDenied: "⚠️ Please enable GPS permissions in settings!",
-            statusGpsNoSupp: "❌ Geolocation is not supported!",
-            statusGpsAcc: "✅ Location found (Accuracy: ±{acc}m)",
-            statusGpsWeak: "⚠️ GPS weak, searching via Internet...",
-            statusGpsApprox: "✅ Approximate location found",
-            statusGpsErr: "⚠️ Insufficient GPS and Internet signal!",
-            statusSearching: "🔍 Searching for shops...",
-            statusNotFound: "📍 No shops found within 1.5 km.",
-            statusFound: "✅ Shops found: {count}",
+            statusGpsDenied: "⚠️ Enable GPS permissions!",
+            statusGpsNoSupp: "❌ Geolocation not supported!",
+            statusGpsAcc: "✅ Found (±{acc}m)",
+            statusGpsWeak: "⚠️ Weak GPS...",
+            statusGpsApprox: "✅ Approx location found",
+            statusGpsErr: "⚠️ Insufficient GPS!",
+            statusSearching: "🔍 Searching shops...",
+            statusNotFound: "📍 No shops found.",
+            statusFound: "✅ Found: {count}",
             statusShopErr: "❌ Error loading shops.",
             btnGps: "🎯 My Location",
             btnSearch: "🏪 Load Shops",
@@ -545,11 +610,11 @@
             nearestLabel: "Nearest:",
             car: "🚗 By Car",
             foot: "🚶‍♂️ On Foot",
-            typeSuper: "Supermarket (Large)",
-            typeKiosk: "Kiosk / Stand",
+            typeSuper: "Supermarket",
+            typeKiosk: "Kiosk",
             typeSmall: "Small Shop",
             settingsTitle: "⚙️ Settings",
-            loginPrompt: "Sign up or log in to use all features:"
+            loginPrompt: "Sign up to use all features:"
         }
     };
 
@@ -573,15 +638,8 @@
         }
     }
 
-    let map = null;
-    let userMarker = null;
-    let userAccuracyCircle = null;
-    let routingControl = null;
-    let fallbackPolyline = null;
-    let shopMarkersLayer = null;
-
-    let userLat = null;
-    let userLng = null;
+    let map = null, userMarker = null, userAccuracyCircle = null, routingControl = null, fallbackPolyline = null, shopMarkersLayer = null;
+    let userLat = null, userLng = null;
 
     function initMap() {
         if (!map) {
@@ -594,10 +652,7 @@
             shopMarkersLayer = L.layerGroup().addTo(map);
         }
 
-        setTimeout(() => {
-            map.invalidateSize();
-        }, 300);
-
+        setTimeout(() => map.invalidateSize(), 300);
         getUserLocation();
     }
 
@@ -615,14 +670,6 @@
     function getUserLocation() {
         const statusEl = document.getElementById('status');
         statusEl.innerHTML = dict[currentLang].statusGpsLoad;
-
-        if (navigator.permissions && navigator.permissions.query) {
-            navigator.permissions.query({ name: 'geolocation' }).then(function(result) {
-                if (result.state === 'denied') {
-                    statusEl.innerHTML = dict[currentLang].statusGpsDenied;
-                }
-            });
-        }
 
         if (!navigator.geolocation) {
             statusEl.innerHTML = dict[currentLang].statusGpsNoSupp;
@@ -654,34 +701,8 @@
 
                 loadTashkentShops();
             },
-            (error) => {
-                statusEl.innerHTML = dict[currentLang].statusGpsWeak;
-                
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => {
-                        userLat = pos.coords.latitude;
-                        userLng = pos.coords.longitude;
-                        
-                        if (userMarker) map.removeLayer(userMarker);
-                        if (userAccuracyCircle) map.removeLayer(userAccuracyCircle);
-
-                        map.setView([userLat, userLng], 15);
-
-                        userMarker = L.marker([userLat, userLng]).addTo(map)
-                            .bindPopup(`<b>${dict[currentLang].myPosApprox}</b>`).openPopup();
-
-                        statusEl.innerHTML = dict[currentLang].statusGpsApprox;
-                        loadTashkentShops();
-                    },
-                    (err) => {
-                        if (err.code === 1) {
-                            statusEl.innerHTML = dict[currentLang].statusGpsDenied;
-                        } else {
-                            statusEl.innerHTML = dict[currentLang].statusGpsErr;
-                        }
-                    },
-                    { enableHighAccuracy: false, timeout: 10000 }
-                );
+            () => {
+                statusEl.innerHTML = dict[currentLang].statusGpsErr;
             },
             { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
         );
@@ -711,9 +732,7 @@
             out body;
         `;
 
-        const apiUrl = "https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(overpassQuery);
-
-        fetch(apiUrl)
+        fetch("https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(overpassQuery))
             .then(res => res.json())
             .then(data => {
                 if (!data.elements || data.elements.length === 0) {
@@ -728,7 +747,6 @@
                 data.elements.forEach(shop => {
                     const sLat = shop.lat;
                     const sLng = shop.lon;
-                    
                     let shopType = dict[currentLang].typeSmall;
                     if (shop.tags.shop === "supermarket") shopType = dict[currentLang].typeSuper;
                     else if (shop.tags.shop === "kiosk") shopType = dict[currentLang].typeKiosk;
@@ -768,52 +786,30 @@
                     `;
                 }
             })
-            .catch(err => {
-                statusEl.innerHTML = dict[currentLang].statusShopErr;
-            });
+            .catch(() => statusEl.innerHTML = dict[currentLang].statusShopErr);
     }
 
     function buildRoute(destLat, destLng, mode = 'car') {
-        if (!userLat || !userLng) {
-            alert(currentLang === 'ru' ? "GPS не найден!" : "GPS aniqlanmadi!");
-            return;
-        }
+        if (!userLat || !userLng) return;
 
-        if (routingControl) {
-            map.removeControl(routingControl);
-            routingControl = null;
-        }
-        if (fallbackPolyline) {
-            map.removeLayer(fallbackPolyline);
-            fallbackPolyline = null;
-        }
+        if (routingControl) map.removeControl(routingControl);
+        if (fallbackPolyline) map.removeLayer(fallbackPolyline);
 
         let lineColor = (mode === 'foot') ? '#10b981' : '#2563eb';
-
         let serviceUrl = (mode === 'foot') 
             ? 'https://routing.openstreetmap.de/routed-foot/route/v1' 
             : 'https://routing.openstreetmap.de/routed-car/route/v1';
 
         try {
             routingControl = L.Routing.control({
-                waypoints: [
-                    L.latLng(userLat, userLng),
-                    L.latLng(destLat, destLng)
-                ],
+                waypoints: [L.latLng(userLat, userLng), L.latLng(destLat, destLng)],
                 router: L.Routing.osrmv1({ serviceUrl: serviceUrl }),
                 routeWhileDragging: false,
                 addWaypoints: false,
                 showAlternatives: false,
-                lineOptions: {
-                    styles: [{ color: lineColor, opacity: 0.85, weight: 6 }]
-                },
+                lineOptions: { styles: [{ color: lineColor, opacity: 0.85, weight: 6 }] },
                 createMarker: function() { return null; }
             }).addTo(map);
-
-            routingControl.on('routingerror', function() {
-                drawFallbackLine(destLat, destLng, lineColor);
-            });
-
         } catch (err) {
             drawFallbackLine(destLat, destLng, lineColor);
         }
@@ -823,11 +819,7 @@
 
     function drawFallbackLine(destLat, destLng, color) {
         if (fallbackPolyline) map.removeLayer(fallbackPolyline);
-        fallbackPolyline = L.polyline([
-            [userLat, userLng],
-            [destLat, destLng]
-        ], { color: color, weight: 5, dashArray: '8, 8' }).addTo(map);
-        
+        fallbackPolyline = L.polyline([[userLat, userLng], [destLat, destLng]], { color: color, weight: 5, dashArray: '8, 8' }).addTo(map);
         map.fitBounds(fallbackPolyline.getBounds(), { padding: [50, 50] });
     }
 
