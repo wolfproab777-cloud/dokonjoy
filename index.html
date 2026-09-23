@@ -15,7 +15,7 @@
 
     <style>
         * { 
-            box-sizing: border-box; 
+            box-sizing: border-box !important; 
             margin: 0; 
             padding: 0; 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
@@ -152,43 +152,54 @@
             100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
         }
 
-        /* Login Modal Fix */
+        /* Login Modal Strict Fixes */
         #login-modal {
             position: fixed;
             top: 0; left: 0;
-            width: 100%; height: 100%;
+            width: 100vw; height: 100vh;
             background: rgba(0, 0, 0, 0.75);
             z-index: 9999;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 16px;
+            padding: 12px;
         }
         .login-box {
             background: white;
-            padding: 24px;
+            padding: 20px;
             border-radius: 14px;
             width: 100%;
-            max-width: 340px;
+            max-width: 320px;
             text-align: center;
             box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            box-sizing: border-box;
             overflow: hidden;
         }
+
+        #phone-step, #code-step {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
         .login-box input {
             width: 100%;
-            padding: 11px;
+            max-width: 100%;
+            padding: 12px 8px;
             margin: 12px 0;
             font-size: 15px;
+            letter-spacing: 0.5px;
             border: 1px solid #d1d5db;
             border-radius: 8px;
             outline: none;
             text-align: center;
-            box-sizing: border-box;
+            background: #ffffff;
+            -webkit-appearance: none;
         }
+        
         .login-box button {
             width: 100%;
-            padding: 11px;
+            padding: 12px;
             background: #2563eb;
             color: white;
             font-size: 15px;
@@ -196,7 +207,6 @@
             border-radius: 8px;
             font-weight: bold;
             cursor: pointer;
-            box-sizing: border-box;
         }
 
         .auth-status {
@@ -220,13 +230,13 @@
         <div id="recaptcha-container"></div>
 
         <div id="phone-step">
-            <input type="tel" id="phone-number" value="+998" placeholder="+998901234567">
+            <input type="tel" id="phone-number" value="+998" placeholder="+998901234567" maxlength="13">
             <button id="btn-sms">SMS Kod Yuborish</button>
         </div>
         
         <div id="code-step" style="display:none;">
             <p id="code-desc" style="font-size:13px; color:#4b5563;">Raqamingizga kelgan 6 xonali kodni kiriting:</p>
-            <input type="number" id="sms-code" placeholder="123456">
+            <input type="number" id="sms-code" placeholder="123456" maxlength="6">
             <button id="btn-verify" style="background:#10b981;">Tasdiqlash va Kirish</button>
         </div>
 
@@ -314,7 +324,7 @@
             authStatus.style.color = "green";
             authStatus.innerText = currentLang === 'ru' ? "Код отправлен!" : "SMS kodi yuborildi!";
             document.getElementById('phone-step').style.display = 'none';
-            document.getElementById('code-step').style.display = 'block';
+            document.getElementById('code-step').style.display = 'flex';
         } catch (error) {
             console.error("SMS Error:", error);
             authStatus.style.color = "red";
