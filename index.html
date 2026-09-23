@@ -45,6 +45,12 @@
             gap: 8px;
         }
 
+        .right-tools {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         .lang-switcher {
             display: flex;
             gap: 4px;
@@ -66,6 +72,15 @@
             background: #2563eb;
             color: white;
             border-color: #2563eb;
+        }
+
+        .settings-btn {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            padding: 4px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
         }
 
         .controls {
@@ -152,19 +167,19 @@
             100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
         }
 
-        /* Login & Register Modal */
-        #login-modal {
+        /* Modal oyna umumiy stili */
+        .modal {
             position: fixed;
             top: 0; left: 0;
             width: 100vw; height: 100vh;
             background: rgba(0, 0, 0, 0.75);
             z-index: 9999;
-            display: flex;
+            display: none;
             justify-content: center;
             align-items: center;
             padding: 12px;
         }
-        .login-box {
+        .modal-box {
             background: white;
             padding: 20px;
             border-radius: 14px;
@@ -172,13 +187,25 @@
             max-width: 340px;
             text-align: center;
             box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            overflow: hidden;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            background: transparent;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: #6b7280;
         }
 
         .auth-tabs {
             display: flex;
             gap: 6px;
             margin-bottom: 15px;
+            margin-top: 10px;
         }
 
         .tab-btn {
@@ -205,7 +232,7 @@
             gap: 10px;
         }
 
-        .login-box input {
+        .modal-box input {
             width: 100%;
             padding: 12px 8px;
             font-size: 14px;
@@ -216,7 +243,7 @@
             background: #ffffff;
         }
         
-        .login-box button.btn-submit {
+        .modal-box button.btn-submit {
             width: 100%;
             padding: 12px;
             background: #2563eb;
@@ -240,9 +267,38 @@
 </head>
 <body>
 
-<!-- Login & Register Modal -->
-<div id="login-modal">
-    <div class="login-box">
+<!-- SOZLAMALAR MODAL OYNASI -->
+<div id="settings-modal" class="modal">
+    <div class="modal-box">
+        <button type="button" class="close-btn" onclick="closeSettings()">✕</button>
+        <h3 id="settings-title" style="margin-bottom: 15px;">⚙️ Sozlamalar</h3>
+        
+        <div id="settings-content">
+            <!-- Tizimga kirilmagan bo'lsa ko'rinadi -->
+            <div id="not-logged-in-box">
+                <p style="font-size: 13px; color: #4b5563; margin-bottom: 12px;" id="login-prompt-txt">
+                    Tizim imkoniyatlaridan to'liq foydalanish uchun ro'yxatdan o'ting yoki kiring:
+                </p>
+                <button type="button" class="btn-submit" onclick="openAuthModal()">🔐 Ro'yxatdan o'tish / Kirish</button>
+            </div>
+
+            <!-- Tizimga kirilgan bo'lsa ko'rinadi -->
+            <div id="logged-in-box" style="display: none;">
+                <p style="font-size: 14px; color: #059669; font-weight: bold; margin-bottom: 8px;" id="user-status-txt">
+                    ✅ Tizimga kirilgansiz
+                </p>
+                <p id="user-phone-disp" style="font-size: 13px; color: #374151; margin-bottom: 15px;"></p>
+                <button type="button" class="btn-submit" style="background: #dc2626;" onclick="logoutUser()">🚪 Tizimdan chiqish</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AUTH (RO'YXATDAN O'TISH / KIRISH) MODAL OYNASI -->
+<div id="login-modal" class="modal">
+    <div class="modal-box">
+        <button type="button" class="close-btn" onclick="closeAuthModal()">✕</button>
+        
         <div class="auth-tabs">
             <button type="button" class="tab-btn active" id="tab-reg-btn" onclick="switchTab('reg')">Ro'yxatdan o'tish</button>
             <button type="button" class="tab-btn" id="tab-login-btn" onclick="switchTab('login')">Kirish</button>
@@ -287,10 +343,14 @@
         <div class="status-box" id="status">
             📍 Joylashuv aniqlanmoqda...
         </div>
-        <div class="lang-switcher">
-            <button type="button" class="lang-btn" id="lang-uz" onclick="changeLang('uz')">UZ</button>
-            <button type="button" class="lang-btn" id="lang-ru" onclick="changeLang('ru')">RU</button>
-            <button type="button" class="lang-btn" id="lang-en" onclick="changeLang('en')">EN</button>
+        <div class="right-tools">
+            <div class="lang-switcher">
+                <button type="button" class="lang-btn" id="lang-uz" onclick="changeLang('uz')">UZ</button>
+                <button type="button" class="lang-btn" id="lang-ru" onclick="changeLang('ru')">RU</button>
+                <button type="button" class="lang-btn" id="lang-en" onclick="changeLang('en')">EN</button>
+            </div>
+            <!-- Sozlamalar tugmasi -->
+            <button type="button" class="settings-btn" onclick="openSettings()">⚙️</button>
         </div>
     </div>
 
@@ -312,10 +372,47 @@
 </a>
 
 <script>
-    // Node.js Express server yoki Render endpoint adresi
     const SERVER_URL = "/api";
 
-    // Tab va bosqichlarni boshqarish
+    // SOZLAMALAR MODAL FUNKSIYALARI
+    function openSettings() {
+        const isLogged = localStorage.getItem('isLogged') === 'true';
+        const userPhone = localStorage.getItem('userPhone') || '';
+
+        if (isLogged) {
+            document.getElementById('not-logged-in-box').style.display = 'none';
+            document.getElementById('logged-in-box').style.display = 'block';
+            document.getElementById('user-phone-disp').innerText = `Raqam: ${userPhone}`;
+        } else {
+            document.getElementById('not-logged-in-box').style.display = 'block';
+            document.getElementById('logged-in-box').style.display = 'none';
+        }
+
+        document.getElementById('settings-modal').style.display = 'flex';
+    }
+
+    function closeSettings() {
+        document.getElementById('settings-modal').style.display = 'none';
+    }
+
+    function openAuthModal() {
+        closeSettings();
+        document.getElementById('login-modal').style.display = 'flex';
+        switchTab('reg');
+    }
+
+    function closeAuthModal() {
+        document.getElementById('login-modal').style.display = 'none';
+    }
+
+    function logoutUser() {
+        localStorage.removeItem('isLogged');
+        localStorage.removeItem('userPhone');
+        alert(currentLang === 'ru' ? "Вы вышли из системы" : "Tizimdan chiqdingiz!");
+        closeSettings();
+    }
+
+    // AUTH TABLARI
     function switchTab(type) {
         document.getElementById('tab-reg-btn').classList.toggle('active', type === 'reg');
         document.getElementById('tab-login-btn').classList.toggle('active', type === 'login');
@@ -323,7 +420,6 @@
         document.getElementById('login-section').style.display = type === 'login' ? 'flex' : 'none';
         document.getElementById('auth-status-msg').innerText = '';
 
-        // Har safar Ro'yxatdan o'tish bo'limiga o'tganda 1-qadam qaytariladi
         if (type === 'reg') {
             document.getElementById('step-1').style.display = 'block';
             document.getElementById('step-2').style.display = 'none';
@@ -356,8 +452,6 @@
             if (res.ok) {
                 msg.style.color = "green";
                 msg.innerText = "SMS kod yuborildi!";
-                
-                // Faqat javob OK bo'lgandagina 2-qadam ochiladi
                 document.getElementById('step-1').style.display = 'none';
                 document.getElementById('step-2').style.display = 'block';
             } else {
@@ -393,8 +487,6 @@
             if (res.ok) {
                 msg.style.color = "green";
                 msg.innerText = "Kod to'g'ri! Endi parol kiriting.";
-                
-                // Faqat kod tasdiqlanganda 3-qadam ochiladi
                 document.getElementById('step-2').style.display = 'none';
                 document.getElementById('step-3').style.display = 'block';
             } else {
@@ -407,7 +499,7 @@
         }
     }
 
-    // 3. Parol o'rnatish va Ro'yxatdan o'tishni yakunlash
+    // 3. Parol o'rnatish va Yakunlash
     async function finishRegister() {
         const phone = document.getElementById('reg-phone').value.trim();
         const password = document.getElementById('reg-password').value.trim();
@@ -429,11 +521,11 @@
 
             if (res.ok) {
                 localStorage.setItem('isLogged', 'true');
+                localStorage.setItem('userPhone', phone);
                 msg.style.color = "green";
                 msg.innerText = "Muvaffaqiyatli ro'yxatdan o'tdingiz!";
                 setTimeout(() => {
-                    document.getElementById('login-modal').style.display = 'none';
-                    initMap();
+                    closeAuthModal();
                 }, 800);
             } else {
                 msg.style.color = "red";
@@ -467,11 +559,11 @@
 
             if (res.ok) {
                 localStorage.setItem('isLogged', 'true');
+                localStorage.setItem('userPhone', phone);
                 msg.style.color = "green";
                 msg.innerText = "Muvaffaqiyatli kirdingiz!";
                 setTimeout(() => {
-                    document.getElementById('login-modal').style.display = 'none';
-                    initMap();
+                    closeAuthModal();
                 }, 800);
             } else {
                 msg.style.color = "red";
@@ -483,7 +575,7 @@
         }
     }
 
-    // 1. TIL SOZLAMALARI
+    // TIL SOZLAMALARI
     const dict = {
         uz: {
             statusInit: "📍 Joylashuv aniqlanmoqda...",
@@ -507,7 +599,9 @@
             foot: "🚶‍♂️ Piyoda",
             typeSuper: "Supermarket (Katta)",
             typeKiosk: "Kiosk / Do'koncha",
-            typeSmall: "Kichik do'kon"
+            typeSmall: "Kichik do'kon",
+            settingsTitle: "⚙️ Sozlamalar",
+            loginPrompt: "Tizim imkoniyatlaridan to'liq foydalanish uchun ro'yxatdan o'ting yoki kiring:"
         },
         ru: {
             statusInit: "📍 Определение локации...",
@@ -531,7 +625,9 @@
             foot: "🚶‍♂️ Пешком",
             typeSuper: "Супермаркет (Большой)",
             typeKiosk: "Киоск / Ларек",
-            typeSmall: "Маленький магазин"
+            typeSmall: "Маленький магазин",
+            settingsTitle: "⚙️ Настройки",
+            loginPrompt: "Зарегистрируйтесь или войдите, чтобы использовать все возможности:"
         },
         en: {
             statusInit: "📍 Finding location...",
@@ -555,7 +651,9 @@
             foot: "🚶‍♂️ On Foot",
             typeSuper: "Supermarket (Large)",
             typeKiosk: "Kiosk / Stand",
-            typeSmall: "Small Shop"
+            typeSmall: "Small Shop",
+            settingsTitle: "⚙️ Settings",
+            loginPrompt: "Sign up or log in to use all features:"
         }
     };
 
@@ -571,13 +669,15 @@
 
         document.getElementById('btn-gps').innerText = dict[lang].btnGps;
         document.getElementById('btn-search').innerText = dict[lang].btnSearch;
+        document.getElementById('settings-title').innerText = dict[lang].settingsTitle;
+        document.getElementById('login-prompt-txt').innerText = dict[lang].loginPrompt;
 
         if (map && userLat && userLng) {
             loadTashkentShops();
         }
     }
 
-    // 2. XARITA VA GLOBAL O'ZGARUVCHILAR
+    // MAP AND GLOBALS
     let map = null;
     let userMarker = null;
     let userAccuracyCircle = null;
@@ -606,7 +706,6 @@
         getUserLocation();
     }
 
-    // 3. GEOLOKATSIYA FUNKSIYALARI
     function getDistanceInMeters(lat1, lon1, lat2, lon2) {
         const R = 6371e3;
         const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -693,7 +792,6 @@
         );
     }
 
-    // 4. OVERPASS API ORQALI DO'KONLARNI YUKLASH
     function loadTashkentShops() {
         const statusEl = document.getElementById('status');
         const infoEl = document.getElementById('nearest-info');
@@ -780,7 +878,6 @@
             });
     }
 
-    // 5. MARSHRUT CHIZISH
     function buildRoute(destLat, destLng, mode = 'car') {
         if (!userLat || !userLng) {
             alert(currentLang === 'ru' ? "GPS не найден!" : "GPS aniqlanmadi!");
@@ -839,13 +936,9 @@
         map.fitBounds(fallbackPolyline.getBounds(), { padding: [50, 50] });
     }
 
-    // 6. ZAGRUZKA QILINGANDA ISHGA TUSHISH
     window.onload = () => {
         changeLang(currentLang);
-        if (localStorage.getItem('isLogged') === 'true') {
-            document.getElementById('login-modal').style.display = 'none';
-            initMap();
-        }
+        initMap(); // Ilova ochilishi bilan to'g'ridan-to'g'ri xaritan yuklaydi
     };
 </script>
 
