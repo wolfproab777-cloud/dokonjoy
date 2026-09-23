@@ -152,7 +152,7 @@
             100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
         }
 
-        /* Login Modal Strict Fixes */
+        /* Login & Register Modal */
         #login-modal {
             position: fixed;
             top: 0; left: 0;
@@ -169,40 +169,59 @@
             padding: 20px;
             border-radius: 14px;
             width: 100%;
-            max-width: 320px;
+            max-width: 340px;
             text-align: center;
             box-shadow: 0 10px 25px rgba(0,0,0,0.3);
             overflow: hidden;
         }
 
-        #phone-step, #code-step {
-            width: 100%;
+        .auth-tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 15px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 8px;
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #374151;
+        }
+
+        .tab-btn.active {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+
+        .input-form {
             display: flex;
             flex-direction: column;
-            align-items: center;
+            gap: 10px;
         }
 
         .login-box input {
             width: 100%;
-            max-width: 100%;
             padding: 12px 8px;
-            margin: 12px 0;
-            font-size: 15px;
-            letter-spacing: 0.5px;
+            font-size: 14px;
             border: 1px solid #d1d5db;
             border-radius: 8px;
             outline: none;
             text-align: center;
             background: #ffffff;
-            -webkit-appearance: none;
         }
         
-        .login-box button {
+        .login-box button.btn-submit {
             width: 100%;
             padding: 12px;
             background: #2563eb;
             color: white;
-            font-size: 15px;
+            font-size: 14px;
             border: none;
             border-radius: 8px;
             font-weight: bold;
@@ -211,7 +230,7 @@
 
         .auth-status {
             font-size: 13px;
-            margin-top: 10px;
+            margin-top: 12px;
             font-weight: 600;
             word-break: break-word;
         }
@@ -221,23 +240,39 @@
 </head>
 <body>
 
-<!-- Login Modal -->
+<!-- Login & Register Modal -->
 <div id="login-modal">
     <div class="login-box">
-        <h3 id="login-title" style="margin-top:0; color:#111827;">Tizimga kirish</h3>
-        
-        <!-- ReCAPTCHA uchun yashirin konteyner -->
-        <div id="recaptcha-container"></div>
-
-        <div id="phone-step">
-            <input type="tel" id="phone-number" value="+998" placeholder="+998901234567" maxlength="13">
-            <button id="btn-sms">SMS Kod Yuborish</button>
+        <div class="auth-tabs">
+            <button class="tab-btn active" id="tab-reg-btn" onclick="switchTab('reg')">Ro'yxatdan o'tish</button>
+            <button class="tab-btn" id="tab-login-btn" onclick="switchTab('login')">Kirish</button>
         </div>
-        
-        <div id="code-step" style="display:none;">
-            <p id="code-desc" style="font-size:13px; color:#4b5563;">Raqamingizga kelgan 6 xonali kodni kiriting:</p>
-            <input type="number" id="sms-code" placeholder="123456" maxlength="6">
-            <button id="btn-verify" style="background:#10b981;">Tasdiqlash va Kirish</button>
+
+        <!-- RO'YXATDAN O'TISH BO'LIMI -->
+        <div id="reg-section" class="input-form">
+            <div id="step-1">
+                <input type="tel" id="reg-phone" value="+998" placeholder="+998901234567" maxlength="13">
+                <button class="btn-submit" style="margin-top:8px;" onclick="sendCode()">SMS Kod Yuborish</button>
+            </div>
+            
+            <div id="step-2" style="display:none;">
+                <p id="code-desc" style="font-size:12px; color:#4b5563; margin-bottom:6px;">6 xonali SMS kodni kiriting:</p>
+                <input type="number" id="reg-code" placeholder="123456" maxlength="6">
+                <button class="btn-submit" style="background:#10b981; margin-top:8px;" onclick="verifyCode()">Kodni Tasdiqlash</button>
+            </div>
+
+            <div id="step-3" style="display:none;">
+                <p style="font-size:12px; color:#4b5563; margin-bottom:6px;">Yangi parol o'rnating:</p>
+                <input type="password" id="reg-password" placeholder="Parol">
+                <button class="btn-submit" style="background:#059669; margin-top:8px;" onclick="finishRegister()">Saqlash va Kirish</button>
+            </div>
+        </div>
+
+        <!-- KIRISH BO'LIMI -->
+        <div id="login-section" class="input-form" style="display:none;">
+            <input type="tel" id="login-phone" value="+998" placeholder="+998901234567" maxlength="13">
+            <input type="password" id="login-password" placeholder="Parolingiz">
+            <button class="btn-submit" onclick="loginUser()">Kirish</button>
         </div>
 
         <p id="auth-status-msg" class="auth-status"></p>
@@ -273,100 +308,154 @@
     </svg>
 </a>
 
-<!-- Firebase SDK Integration -->
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { 
-        getAuth, 
-        RecaptchaVerifier, 
-        signInWithPhoneNumber 
-    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyD-NgvjVmYlxRHMysVWfA30SArjDiKG83w",
-        authDomain: "dokonjoylashuuz.firebaseapp.com",
-        projectId: "dokonjoylashuuz",
-        storageBucket: "dokonjoylashuuz.firebasestorage.app",
-        messagingSenderId: "665334102750",
-        appId: "1:665334102750:web:8667baf5e3fefae465e04f",
-        measurementId: "G-REKZHXT75T"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-
-    const btnSms = document.getElementById('btn-sms');
-    const btnVerify = document.getElementById('btn-verify');
-    const authStatus = document.getElementById('auth-status-msg');
-
-    window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        'size': 'invisible'
-    });
-
-    btnSms.addEventListener('click', async () => {
-        let phone = document.getElementById('phone-number').value.trim();
-
-        if (!phone.startsWith('+998') || phone.length < 13) {
-            authStatus.style.color = "red";
-            authStatus.innerText = currentLang === 'ru' ? "Введите корректный номер!" : "To'g'ri telefon raqam kiriting!";
-            return;
-        }
-
-        authStatus.style.color = "blue";
-        authStatus.innerText = currentLang === 'ru' ? "Отправка SMS..." : "SMS yuborilmoqda...";
-        btnSms.disabled = true;
-
-        try {
-            const appVerifier = window.recaptchaVerifier;
-            const confirmationResult = await signInWithPhoneNumber(auth, phone, appVerifier);
-            window.confirmationResult = confirmationResult;
-
-            authStatus.style.color = "green";
-            authStatus.innerText = currentLang === 'ru' ? "Код отправлен!" : "SMS kodi yuborildi!";
-            document.getElementById('phone-step').style.display = 'none';
-            document.getElementById('code-step').style.display = 'flex';
-        } catch (error) {
-            console.error("SMS Error:", error);
-            authStatus.style.color = "red";
-            authStatus.innerText = "Error: " + error.message;
-            btnSms.disabled = false;
-        }
-    });
-
-    btnVerify.addEventListener('click', async () => {
-        let code = document.getElementById('sms-code').value.trim();
-
-        if (code.length !== 6) {
-            authStatus.style.color = "red";
-            authStatus.innerText = currentLang === 'ru' ? "Введите 6-значный код!" : "6 xonali kodni kiriting!";
-            return;
-        }
-
-        authStatus.style.color = "blue";
-        authStatus.innerText = currentLang === 'ru' ? "Проверка кода..." : "Kod tekshirilmoqda...";
-
-        try {
-            const result = await window.confirmationResult.confirm(code);
-            const user = result.user;
-
-            authStatus.style.color = "green";
-            authStatus.innerText = currentLang === 'ru' ? "Успешный вход!" : "Muvaffaqiyatli kirdingiz!";
-            
-            localStorage.setItem('isLogged', 'true');
-            setTimeout(() => {
-                document.getElementById('login-modal').style.display = 'none';
-                initMap();
-            }, 500);
-
-        } catch (error) {
-            console.error("Verify Error:", error);
-            authStatus.style.color = "red";
-            authStatus.innerText = currentLang === 'ru' ? "Неверный код!" : "Xato kod kiritildi!";
-        }
-    });
-</script>
-
 <script>
+    const SERVER_URL = "http://localhost:8000/api";
+
+    function switchTab(type) {
+        document.getElementById('tab-reg-btn').classList.toggle('active', type === 'reg');
+        document.getElementById('tab-login-btn').classList.toggle('active', type === 'login');
+        document.getElementById('reg-section').style.display = type === 'reg' ? 'flex' : 'none';
+        document.getElementById('login-section').style.display = type === 'login' ? 'flex' : 'none';
+        document.getElementById('auth-status-msg').innerText = '';
+    }
+
+    // 1. SMS Kod Yuborish
+    async function sendCode() {
+        const phone = document.getElementById('reg-phone').value.trim();
+        const msg = document.getElementById('auth-status-msg');
+
+        if (phone.length < 13) {
+            msg.style.color = "red";
+            msg.innerText = "Telefon raqamni to'liq kiriting!";
+            return;
+        }
+
+        msg.style.color = "blue";
+        msg.innerText = "SMS kod yuborilmoqda...";
+
+        try {
+            const res = await fetch(`${SERVER_URL}/send-code`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ phone })
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                msg.style.color = "green";
+                msg.innerText = "Kod yuborildi! Python konsolini tekshiring.";
+                document.getElementById('step-1').style.display = 'none';
+                document.getElementById('step-2').style.display = 'block';
+            } else {
+                msg.style.color = "red";
+                msg.innerText = data.detail;
+            }
+        } catch (e) {
+            msg.style.color = "red";
+            msg.innerText = "Server bilan aloqa yo'q!";
+        }
+    }
+
+    // 2. Kodni Tekshirish
+    async function verifyCode() {
+        const phone = document.getElementById('reg-phone').value.trim();
+        const code = document.getElementById('reg-code').value.trim();
+        const msg = document.getElementById('auth-status-msg');
+
+        try {
+            const res = await fetch(`${SERVER_URL}/verify-code`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ phone, code })
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                msg.style.color = "green";
+                msg.innerText = "Kod to'g'ri! Endi parol kiriting.";
+                document.getElementById('step-2').style.display = 'none';
+                document.getElementById('step-3').style.display = 'block';
+            } else {
+                msg.style.color = "red";
+                msg.innerText = data.detail;
+            }
+        } catch (e) {
+            msg.style.color = "red";
+            msg.innerText = "Xatolik yuz berdi!";
+        }
+    }
+
+    // 3. Parol o'rnatish va Ro'yxatdan o'tishni yakunlash
+    async function finishRegister() {
+        const phone = document.getElementById('reg-phone').value.trim();
+        const code = document.getElementById('reg-code').value.trim();
+        const password = document.getElementById('reg-password').value.trim();
+        const msg = document.getElementById('auth-status-msg');
+
+        if (!password) {
+            msg.style.color = "red";
+            msg.innerText = "Parol kiriting!";
+            return;
+        }
+
+        try {
+            const res = await fetch(`${SERVER_URL}/register`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ phone, code, password })
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                localStorage.setItem('isLogged', 'true');
+                msg.style.color = "green";
+                msg.innerText = "Muvaffaqiyatli ro'yxatdan o'tdingiz!";
+                setTimeout(() => {
+                    document.getElementById('login-modal').style.display = 'none';
+                    initMap();
+                }, 800);
+            } else {
+                msg.style.color = "red";
+                msg.innerText = data.detail;
+            }
+        } catch (e) {
+            msg.style.color = "red";
+            msg.innerText = "Server xatosi!";
+        }
+    }
+
+    // 4. Kirish (Login)
+    async function loginUser() {
+        const phone = document.getElementById('login-phone').value.trim();
+        const password = document.getElementById('login-password').value.trim();
+        const msg = document.getElementById('auth-status-msg');
+
+        try {
+            const res = await fetch(`${SERVER_URL}/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ phone, password })
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                localStorage.setItem('isLogged', 'true');
+                msg.style.color = "green";
+                msg.innerText = "Muvaffaqiyatli kirdingiz!";
+                setTimeout(() => {
+                    document.getElementById('login-modal').style.display = 'none';
+                    initMap();
+                }, 800);
+            } else {
+                msg.style.color = "red";
+                msg.innerText = data.detail;
+            }
+        } catch (e) {
+            msg.style.color = "red";
+            msg.innerText = "Server bilan aloqa yo'q!";
+        }
+    }
+
     // 1. TIL SOZLAMALARI
     const dict = {
         uz: {
@@ -382,10 +471,6 @@
             statusNotFound: "📍 1.5 km atrofida do'konlar topilmadi.",
             statusFound: "✅ Topilgan do'konlar: {count} ta",
             statusShopErr: "❌ Do'konlarni yuklashda xatolik yuz berdi.",
-            loginTitle: "Tizimga kirish",
-            btnSms: "SMS Kod Yuborish",
-            codeDesc: "6 xonali kodni kiriting:",
-            btnVerify: "Tasdiqlash va Kirish",
             btnGps: "🎯 Mening joyim",
             btnSearch: "🏪 Do'konlarni yuklash",
             myPos: "Siz shu yerdasiz!",
@@ -410,10 +495,6 @@
             statusNotFound: "📍 В радиусе 1.5 км магазины не найдены.",
             statusFound: "✅ Найдено магазинов: {count} шт",
             statusShopErr: "❌ Ошибка при загрузке магазинов.",
-            loginTitle: "Вход в систему",
-            btnSms: "Отправить SMS код",
-            codeDesc: "Введите 6-значный код:",
-            btnVerify: "Подтвердить и войти",
             btnGps: "🎯 Моё местоположение",
             btnSearch: "🏪 Загрузить магазины",
             myPos: "Вы здесь!",
@@ -438,10 +519,6 @@
             statusNotFound: "📍 No shops found within 1.5 km.",
             statusFound: "✅ Shops found: {count}",
             statusShopErr: "❌ Error loading shops.",
-            loginTitle: "System Login",
-            btnSms: "Send SMS Code",
-            codeDesc: "Enter 6-digit code:",
-            btnVerify: "Verify & Login",
             btnGps: "🎯 My Location",
             btnSearch: "🏪 Load Shops",
             myPos: "You are here!",
@@ -465,10 +542,6 @@
         const activeBtn = document.getElementById(`lang-${lang}`);
         if(activeBtn) activeBtn.classList.add('active');
 
-        document.getElementById('login-title').innerText = dict[lang].loginTitle;
-        document.getElementById('btn-sms').innerText = dict[lang].btnSms;
-        document.getElementById('code-desc').innerText = dict[lang].codeDesc;
-        document.getElementById('btn-verify').innerText = dict[lang].btnVerify;
         document.getElementById('btn-gps').innerText = dict[lang].btnGps;
         document.getElementById('btn-search').innerText = dict[lang].btnSearch;
 
