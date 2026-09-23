@@ -14,7 +14,12 @@
     <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+        }
         body { display: flex; flex-direction: column; height: 100vh; background: #f0f2f5; position: relative; }
         
         #header {
@@ -147,7 +152,7 @@
             100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
         }
 
-        /* Login Modal */
+        /* Login Modal Fix */
         #login-modal {
             position: fixed;
             top: 0; left: 0;
@@ -157,15 +162,18 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 16px;
         }
         .login-box {
             background: white;
             padding: 24px;
             border-radius: 14px;
-            width: 85%;
-            max-width: 330px;
+            width: 100%;
+            max-width: 340px;
             text-align: center;
             box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            box-sizing: border-box;
+            overflow: hidden;
         }
         .login-box input {
             width: 100%;
@@ -176,6 +184,7 @@
             border-radius: 8px;
             outline: none;
             text-align: center;
+            box-sizing: border-box;
         }
         .login-box button {
             width: 100%;
@@ -187,12 +196,14 @@
             border-radius: 8px;
             font-weight: bold;
             cursor: pointer;
+            box-sizing: border-box;
         }
 
         .auth-status {
             font-size: 13px;
             margin-top: 10px;
             font-weight: 600;
+            word-break: break-word;
         }
 
         .leaflet-routing-container { display: none !important; }
@@ -278,12 +289,10 @@
     const btnVerify = document.getElementById('btn-verify');
     const authStatus = document.getElementById('auth-status-msg');
 
-    // Keyingi reCAPTCHA obyektini saqlaymiz
     window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
         'size': 'invisible'
     });
 
-    // SMS yuborish logikasi
     btnSms.addEventListener('click', async () => {
         let phone = document.getElementById('phone-number').value.trim();
 
@@ -314,7 +323,6 @@
         }
     });
 
-    // SMS-kodni tekshirish logikasi
     btnVerify.addEventListener('click', async () => {
         let code = document.getElementById('sms-code').value.trim();
 
