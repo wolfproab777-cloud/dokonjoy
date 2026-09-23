@@ -3,344 +3,352 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Do'konlar Joylashuvi</title>
+    <title>Toshkent Do'konlari va Navigatsiya</title>
     
-    <!-- Leaflet CSS va JS (Xarita uchun) -->
+    <!-- Leaflet CSS va JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
-    <!-- Leaflet Routing Machine (Marshrut chizish uchun) -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
-    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.min.js"></script>
-    
+    <!-- Leaflet Routing Machine -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+
     <style>
-        body, html { 
-            margin: 0; 
-            padding: 0; 
-            font-family: Arial, sans-serif; 
-            width: 100%; 
-            height: 100%; 
-            overflow: hidden;
-        }
-
-        /* Xarita konteyneri */
-        #map { 
-            width: 100%; 
-            height: 100vh; 
-            z-index: 1; 
-            background-color: #e5e3df; /* Xarita yuklanguncha ko'rinadigan fon */
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { display: flex; flex-direction: column; height: 100vh; background: #f0f2f5; position: relative; }
         
-        /* Tillar paneli */
-        .lang-switcher {
-            position: fixed; 
-            top: 10px; 
-            right: 10px; 
+        #header {
+            background: #ffffff;
+            padding: 12px 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             z-index: 1000;
-            background: white; 
-            padding: 4px; 
-            border-radius: 8px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.25); 
-            display: flex; 
-            gap: 4px;
-        }
-        .lang-switcher button {
-            border: none; 
-            background: #f3f4f6; 
-            cursor: pointer; 
-            font-size: 13px; 
-            padding: 6px 10px; 
-            border-radius: 6px; 
-            font-weight: bold; 
-            color: #374151;
-            transition: 0.2s;
-        }
-        .lang-switcher button:active { 
-            background: #d1d5db; 
         }
 
-        /* GPS Status paneli */
-        #status-panel {
-            position: fixed; 
-            top: 10px; 
-            left: 10px; 
-            z-index: 1000;
-            background: white; 
-            padding: 8px 12px; 
-            border-radius: 8px; 
-            font-size: 12px; 
-            font-weight: bold; 
-            color: #1f2937;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-        }
-
-        /* Operator Call tugmasi */
-        .call-btn {
-            position: fixed; 
-            bottom: 25px; 
-            right: 20px; 
-            z-index: 1000;
-            background-color: #2563eb; 
-            color: white; 
-            border-radius: 50%;
-            width: 56px; 
-            height: 56px; 
-            display: flex; 
-            justify-content: center;
-            align-items: center; 
-            text-decoration: none; 
-            font-size: 26px;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
-        }
-
-        /* Login Modal oynasi */
-        #login-modal {
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%;
-            background: rgba(0, 0, 0, 0.75); 
-            z-index: 9999; 
+        .status-box {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 8px;
             display: flex;
-            justify-content: center; 
             align-items: center;
+            gap: 8px;
         }
-        .login-box {
-            background: white; 
-            padding: 24px; 
-            border-radius: 14px;
-            width: 82%; 
-            max-width: 320px; 
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        button {
+            padding: 10px 14px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+        button:active { transform: scale(0.97); }
+
+        .btn-gps { background: #2563eb; color: white; }
+        .btn-search { background: #059669; color: white; }
+
+        #nearest-info {
+            margin-top: 8px;
+            padding: 8px;
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #065f46;
+            display: none;
+        }
+
+        #map { flex: 1; width: 100%; height: 100%; }
+
+        .leaflet-popup-content-wrapper { border-radius: 8px; padding: 4px; }
+        .popup-btn {
+            display: block;
+            width: 100%;
+            margin-top: 8px;
+            padding: 6px;
+            background: #10b981;
+            color: white;
             text-align: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        }
-        .login-box input {
-            width: 90%; 
-            padding: 11px; 
-            margin: 12px 0; 
-            font-size: 15px;
-            border: 1px solid #d1d5db; 
-            border-radius: 8px; 
-            outline: none;
-            text-align: center;
-        }
-        .login-box button {
-            width: 98%; 
-            padding: 11px; 
-            background: #2563eb; 
-            color: white; 
-            font-size: 15px;
-            border: none; 
-            border-radius: 8px; 
-            font-weight: bold; 
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: bold;
+            border: none;
             cursor: pointer;
         }
 
-        /* Leaflet marshrut panelining ortiqcha textlarini yashirish */
-        .leaflet-routing-container { 
-            display: none !important; 
+        /* Operator tugmasi (O'ng tomonda dumaloq) */
+        .call-operator-btn {
+            position: fixed;
+            bottom: 25px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background-color: #25d366;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            text-decoration: none;
+            z-index: 2000;
+            transition: transform 0.2s ease;
+            animation: pulse 2s infinite;
+        }
+
+        .call-operator-btn:active {
+            transform: scale(0.9);
+        }
+
+        .call-operator-btn svg {
+            width: 28px;
+            height: 28px;
+            fill: white;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(37, 211, 102, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
         }
     </style>
 </head>
 <body>
 
-    <!-- GPS Holati -->
-    <div id="status-panel">📍 Joylashuv aniqlanmoqda...</div>
-
-    <!-- Tilni o'zgartirish paneli -->
-    <div class="lang-switcher">
-        <button onclick="changeLang('uz')">UZ</button>
-        <button onclick="changeLang('ru')">RU</button>
-        <button onclick="changeLang('en')">EN</button>
+<div id="header">
+    <div class="status-box" id="status">
+        📍 Joylashuv aniqlanmoqda...
     </div>
 
-    <!-- Login va SMS kiritish oynasi -->
-    <div id="login-modal">
-        <div class="login-box">
-            <h3 id="login-title" style="margin-top:0; color:#111827;">Tizimga kirish</h3>
-            
-            <!-- 1-qadam: Raqam -->
-            <div id="phone-step">
-                <input type="tel" id="phone-number" placeholder="+998 90 123 45 67">
-                <button onclick="sendSMS()" id="btn-sms">SMS Kod Yuborish</button>
-            </div>
-            
-            <!-- 2-qadam: SMS Kod -->
-            <div id="code-step" style="display:none;">
-                <p id="code-desc" style="font-size:13px; color:#4b5563;">Raqamingizga kelgan 6 xonali kodni kiriting:</p>
-                <input type="number" id="sms-code" placeholder="123456">
-                <button onclick="verifySMS()" id="btn-verify" style="background:#10b981;">Tasdiqlash va Kirish</button>
-            </div>
-        </div>
+    <div class="controls">
+        <button class="btn-gps" onclick="getUserLocation()">🎯 Mening joyim</button>
+        <button class="btn-search" onclick="loadTashkentShops()">🏪 Do'konlarni yuklash</button>
     </div>
 
-    <!-- Operatorga qo'ng'iroq qilish -->
-    <a href="tel:200118035" class="call-btn">📞</a>
+    <div id="nearest-info"></div>
+</div>
 
-    <!-- Xarita konteyneri -->
-    <div id="map"></div>
+<div id="map"></div>
 
-    <script>
-        // 1. TIL LUG'ATI
-        const dict = {
-            uz: { statusLoad: "📍 Joylashuv aniqlanmoqda...", statusDone: "✅ Joylashuv aniqlandi", login: "Tizimga kirish", btnSms: "SMS Kod Yuborish", codeDesc: "6 xonali kodni kiriting:", btnVerify: "Tasdiqlash va Kirish", car: "🚗 Mashinada", foot: "🚶‍♂️ Piyoda", myPos: "Siz shu yerdasiz!" },
-            ru: { statusLoad: "📍 Поиск локации...", statusDone: "✅ Локация найдена", login: "Вход в систему", btnSms: "Отправить SMS", codeDesc: "Введите 6-значный код:", btnVerify: "Подтвердить", car: "🚗 На авто", foot: "🚶‍♂️ Пешком", myPos: "Вы здесь!" },
-            en: { statusLoad: "📍 Finding location...", statusDone: "✅ Location found", login: "Login", btnSms: "Send SMS Code", codeDesc: "Enter 6-digit code:", btnVerify: "Verify & Enter", car: "🚗 By Car", foot: "🚶‍♂️ On Foot", myPos: "You are here!" }
-        };
+<!-- Operatorga qo'ng'iroq qilish tugmasi -->
+<a href="tel:200118035" class="call-operator-btn" title="Operatorga qo'ng'iroq qilish">
+    <svg viewBox="0 0 24 24">
+        <path d="M6.62 10.79a15.053 15.053 0 006.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+    </svg>
+</a>
 
-        let currentLang = localStorage.getItem('appLang') || 'uz';
+<script>
+    let map = L.map('map').setView([41.311081, 69.240562], 14);
 
-        function changeLang(lang) {
-            currentLang = lang;
-            localStorage.setItem('appLang', lang);
-            
-            let loginTitle = document.getElementById('login-title');
-            let btnSms = document.getElementById('btn-sms');
-            let codeDesc = document.getElementById('code-desc');
-            let btnVerify = document.getElementById('btn-verify');
+    let userMarker = null;
+    let userAccuracyCircle = null;
+    let routingControl = null;
+    let shopMarkersLayer = L.layerGroup().addTo(map);
 
-            if(loginTitle) loginTitle.innerText = dict[lang].login;
-            if(btnSms) btnSms.innerText = dict[lang].btnSms;
-            if(codeDesc) codeDesc.innerText = dict[lang].codeDesc;
-            if(btnVerify) btnVerify.innerText = dict[lang].btnVerify;
+    let userLat = null;
+    let userLng = null;
 
-            if (map) loadShopsToMap();
-        }
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+    }).addTo(map);
 
-        // 2. XARITA O'ZGARUVCHILARI
-        let map = null;
-        let userLat = null;
-        let userLng = null;
-        let userMarker = null;
-        let routingControl = null;
+    function getDistanceInMeters(lat1, lon1, lat2, lon2) {
+        const R = 6371e3;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return Math.round(R * c);
+    }
 
-        // Xaritani ishga tushirish va kulrang ekranni tuzatish
-        function initMap() {
-            if (!map) {
-                map = L.map('map', { zoomControl: false }).setView([41.2995, 69.2401], 12);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 19
-                }).addTo(map);
-                L.control.zoom({ position: 'bottomleft' }).addTo(map);
-            }
+    function getUserLocation() {
+        const statusEl = document.getElementById('status');
+        statusEl.innerHTML = "⏳ GPS aniqlanmoqda...";
 
-            // KULRANG EKRANNI TUZATISH (invalidateSize)
-            setTimeout(() => {
-                map.invalidateSize();
-            }, 300);
-
-            startGPS();
-        }
-
-        // 3. SMS KIRISH LOGIKASI
-        window.addEventListener('load', () => {
-            changeLang(currentLang);
-            
-            if (localStorage.getItem('isLogged') === 'true') {
-                let modal = document.getElementById('login-modal');
-                if(modal) modal.style.display = 'none';
-                initMap();
-            }
-        });
-
-        function sendSMS() {
-            let phone = document.getElementById('phone-number').value;
-            if (phone.length >= 9) {
-                document.getElementById('phone-step').style.display = 'none';
-                document.getElementById('code-step').style.display = 'block';
-            } else {
-                alert("Telefon raqamni to'liq kiriting!");
-            }
-        }
-
-        function verifySMS() {
-            let code = document.getElementById('sms-code').value;
-            if (code.length > 0) {
-                localStorage.setItem('isLogged', 'true');
-                document.getElementById('login-modal').style.display = 'none';
-                initMap(); // Авторизациядан сўнг хarita o'lchamini qayta hisoblash
-            }
-        }
-
-        // 4. GPS JOYLASHUV
-        function startGPS() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        userLat = position.coords.latitude;
-                        userLng = position.coords.longitude;
-
-                        if (map) {
-                            map.setView([userLat, userLng], 14);
-                            if (userMarker) map.removeLayer(userMarker);
-                            userMarker = L.marker([userLat, userLng]).addTo(map)
-                                .bindPopup(`<b>${dict[currentLang].myPos}</b>`).openPopup();
-                        }
-
-                        document.getElementById('status-panel').innerText = dict[currentLang].statusDone;
-                        loadShopsToMap();
-                    },
-                    (error) => {
-                        document.getElementById('status-panel').innerText = "❌ GPS o'chiq";
-                        loadShopsToMap();
-                    },
-                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-                );
-            }
-        }
-
-        // 5. DO'KONLAR VA MARSHRUT
-        const shopsData = [
-            { id: 1, name: "Chilonzor Do'koni", lat: 41.2753, lng: 69.2066 },
-            { id: 2, name: "Yunusobod Do'koni", lat: 41.3644, lng: 69.2842 },
-            { id: 3, name: "Mirzo Ulug'bek Do'koni", lat: 41.3265, lng: 69.3243 }
-        ];
-
-        function loadShopsToMap() {
-            if (!map) return;
-            
-            shopsData.forEach(shop => {
-                let popupHtml = `
-                    <div style="text-align:center; min-width:130px;">
-                        <b style="color:#1e3a8a; font-size:14px;">${shop.name}</b><br><br>
-                        <div style="display:flex; flex-direction:column; gap:6px;">
-                            <button onclick="drawRouteToShop(${shop.lat}, ${shop.lng}, 'car')" style="background:#2563eb; color:white; border:none; padding:7px; border-radius:6px; font-weight:bold; cursor:pointer;">
-                                ${dict[currentLang].car}
-                            </button>
-                            <button onclick="drawRouteToShop(${shop.lat}, ${shop.lng}, 'foot')" style="background:#10b981; color:white; border:none; padding:7px; border-radius:6px; font-weight:bold; cursor:pointer;">
-                                ${dict[currentLang].foot}
-                            </button>
-                        </div>
-                    </div>
-                `;
-                L.marker([shop.lat, shop.lng]).addTo(map).bindPopup(popupHtml);
+        if (navigator.permissions && navigator.permissions.query) {
+            navigator.permissions.query({ name: 'geolocation' }).then(function(result) {
+                if (result.state === 'denied') {
+                    statusEl.innerHTML = "⚠️ Iltimos, ilova sozlamalaridan GPS-ga ruxsat bering!";
+                }
             });
         }
 
-        window.drawRouteToShop = function(destLat, destLng, mode) {
-            if (!userLat || !userLng) {
-                alert("GPS aniqlanmadi! Mobil qurilmangizda joylashuvni yoqing.");
-                return;
+        if (!navigator.geolocation) {
+            statusEl.innerHTML = "❌ Geolokatsiya qo'llab-quvvatlanmaydi!";
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                userLat = position.coords.latitude;
+                userLng = position.coords.longitude;
+                const accuracy = Math.round(position.coords.accuracy);
+
+                statusEl.innerHTML = `✅ Aniq joylashuv topildi (Xatolik: ±${accuracy}m)`;
+
+                if (userMarker) map.removeLayer(userMarker);
+                if (userAccuracyCircle) map.removeLayer(userAccuracyCircle);
+
+                map.setView([userLat, userLng], 16);
+
+                userMarker = L.marker([userLat, userLng]).addTo(map)
+                    .bindPopup("<b>Siz shu yerdasiz!</b>").openPopup();
+
+                userAccuracyCircle = L.circle([userLat, userLng], {
+                    radius: accuracy,
+                    color: '#2563eb',
+                    fillColor: '#3b82f6',
+                    fillOpacity: 0.15
+                }).addTo(map);
+
+                loadTashkentShops();
+            },
+            (error) => {
+                statusEl.innerHTML = "⚠️ GPS kuchi yetmadi, Internet orqali izlanmoqda...";
+                
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        userLat = pos.coords.latitude;
+                        userLng = pos.coords.longitude;
+                        
+                        if (userMarker) map.removeLayer(userMarker);
+                        if (userAccuracyCircle) map.removeLayer(userAccuracyCircle);
+
+                        map.setView([userLat, userLng], 15);
+
+                        userMarker = L.marker([userLat, userLng]).addTo(map)
+                            .bindPopup("<b>Taxminiy joylashuvingiz!</b>").openPopup();
+
+                        statusEl.innerHTML = "✅ Taxminiy joylashuv topildi";
+                        loadTashkentShops();
+                    },
+                    (err) => {
+                        if (err.code === 1) {
+                            statusEl.innerHTML = "⚠️ Iltimos, ilovaga GPS ruxsatini bering!";
+                        } else {
+                            statusEl.innerHTML = "⚠️ GPS va Internet signali yetarli emas!";
+                        }
+                    },
+                    { enableHighAccuracy: false, timeout: 10000 }
+                );
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 8000,
+                maximumAge: 0
             }
+        );
+    }
 
-            if (routingControl) map.removeControl(routingControl);
+    function loadTashkentShops() {
+        const statusEl = document.getElementById('status');
+        const infoEl = document.getElementById('nearest-info');
 
-            let profileType = (mode === 'foot') ? 'foot' : 'car';
-            let lineColor = (mode === 'foot') ? '#10b981' : '#2563eb';
+        if (!userLat || !userLng) {
+            const center = map.getCenter();
+            userLat = center.lat;
+            userLng = center.lng;
+        }
 
-            routingControl = L.Routing.control({
-                waypoints: [
-                    L.latLng(userLat, userLng),
-                    L.latLng(destLat, destLng)
-                ],
-                router: L.Routing.osrmv1({ serviceUrl: `https://router.project-osrm.org/route/v1/${profileType}` }),
-                lineOptions: { styles: [{ color: lineColor, weight: 6, opacity: 0.8 }] },
-                createMarker: function() { return null; }
-            }).addTo(map);
+        statusEl.innerHTML = "🔍 Do'konlar izlanmoqda...";
+        shopMarkersLayer.clearLayers();
 
-            map.closePopup();
-        };
-    </script>
+        const overpassQuery = `
+            [out:json];
+            (
+              node["shop"="supermarket"](around:1500, ${userLat}, ${userLng});
+              node["shop"="convenience"](around:1500, ${userLat}, ${userLng});
+              node["shop"="grocery"](around:1500, ${userLat}, ${userLng});
+              node["shop"="kiosk"](around:1500, ${userLat}, ${userLng});
+            );
+            out body;
+        `;
+
+        const apiUrl = "https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(overpassQuery);
+
+        fetch(apiUrl)
+            .then(res => res.json())
+            .then(data => {
+                if (!data.elements || data.elements.length === 0) {
+                    statusEl.innerHTML = "📍 1.5 km atrofida do'konlar topilmadi.";
+                    return;
+                }
+
+                let nearestStore = null;
+                let minDistance = Infinity;
+
+                data.elements.forEach(shop => {
+                    const sLat = shop.lat;
+                    const sLng = shop.lon;
+                    
+                    let shopType = "Kichik do'kon";
+                    if (shop.tags.shop === "supermarket") shopType = "Supermarket (Katta)";
+                    else if (shop.tags.shop === "kiosk") shopType = "Kiosk / Do'koncha";
+
+                    const shopName = shop.tags.name || shopType;
+                    const dist = getDistanceInMeters(userLat, userLng, sLat, sLng);
+
+                    const marker = L.marker([sLat, sLng]);
+                    marker.bindPopup(`
+                        <b>${shopName}</b><br>
+                        <small>Turi: ${shopType}</small><br>
+                        <b>Masofa:</b> ${dist} metr<br>
+                        <button class="popup-btn" onclick="buildRoute(${sLat}, ${sLng})">🚀 Shu yerga yo'l ko'rsat</button>
+                    `);
+
+                    shopMarkersLayer.addLayer(marker);
+
+                    if (dist < minDistance) {
+                        minDistance = dist;
+                        nearestStore = { name: shopName, lat: sLat, lng: sLng, dist: dist };
+                    }
+                });
+
+                statusEl.innerHTML = `✅ Topilgan do'konlar: ${data.elements.length} ta`;
+
+                if (nearestStore) {
+                    infoEl.style.display = "block";
+                    infoEl.innerHTML = `
+                        <b>Eng yaqin:</b> ${nearestStore.name} (${nearestStore.dist} metr)<br>
+                        <button class="popup-btn" style="margin-top:5px;" onclick="buildRoute(${nearestStore.lat}, ${nearestStore.lng})">🗺️ Yo'nalishni ko'rsatish</button>
+                    `;
+                }
+            })
+            .catch(err => {
+                statusEl.innerHTML = "❌ Do'konlarni yuklashda xatolik yuz berdi.";
+            });
+    }
+
+    function buildRoute(destLat, destLng) {
+        if (routingControl) map.removeControl(routingControl);
+
+        routingControl = L.Routing.control({
+            waypoints: [
+                L.latLng(userLat, userLng),
+                L.latLng(destLat, destLng)
+            ],
+            routeWhileDragging: false,
+            addWaypoints: false,
+            showAlternatives: false,
+            lineOptions: {
+                styles: [{ color: '#2563eb', opacity: 0.8, weight: 6 }]
+            }
+        }).addTo(map);
+    }
+
+    window.onload = getUserLocation;
+</script>
+
 </body>
 </html>
