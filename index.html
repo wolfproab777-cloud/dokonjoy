@@ -372,7 +372,8 @@
 </a>
 
 <script>
-    const SERVER_URL = "/api";
+    // Firebase Realtime Database URL manzili
+    const DB_URL = "https://dokonjoylashuuz-default-rtdb.firebaseio.com";
 
     // SOZLAMALAR MODAL FUNKSIYALARI
     function openSettings() {
@@ -427,7 +428,7 @@
         }
     }
 
-    // 1. SMS Kod Yuborish
+    // 1. SMS Kod Yuborish (Firebase-ga vaqtincha kod saqlaydi)
     async function sendCode() {
         const phone = document.getElementById('reg-phone').value.trim();
         const msg = document.getElementById('auth-status-msg');
@@ -438,35 +439,37 @@
             return;
         }
 
+        const cleanPhone = phone.replace('+', '');
+        const generatedCode = "123456"; // Test uchun SMS kod
+
         msg.style.color = "blue";
         msg.innerText = "SMS kod yuborilmoqda...";
 
         try {
-            const res = await fetch(`${SERVER_URL}/send-code`, {
-                method: "POST",
+            const res = await fetch(`${DB_URL}/codes/${cleanPhone}.json`, {
+                method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ phone })
+                body: JSON.stringify({ code: generatedCode, createdAt: Date.now() })
             });
-            const data = await res.json();
 
             if (res.ok) {
                 msg.style.color = "green";
-                msg.innerText = "SMS kod yuborildi!";
+                msg.innerText = "SMS kod yuborildi! (Test kod: 123456)";
                 document.getElementById('step-1').style.display = 'none';
                 document.getElementById('step-2').style.display = 'block';
             } else {
                 msg.style.color = "red";
-                msg.innerText = data.detail || "SMS yuborishda xatolik!";
+                msg.innerText = "Firebase ga ulanishda xatolik!";
             }
         } catch (e) {
             msg.style.color = "red";
-            msg.innerText = "Server bilan aloqa yo'q!";
+            msg.innerText = "Tarmoq xatoligi!";
         }
     }
 
     // 2. Kodni Tekshirish
     async function verifyCode() {
-        const phone = document.getElementById('reg-phone').value.trim();
+        const phone = document.getElementById('reg-phone').value.trim().replace('+', '');
         const code = document.getElementById('reg-code').value.trim();
         const msg = document.getElementById('auth-status-msg');
 
@@ -477,21 +480,17 @@
         }
 
         try {
-            const res = await fetch(`${SERVER_URL}/verify-code`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ phone, code })
-            });
+            const res = await fetch(`${DB_URL}/codes/${phone}.json`);
             const data = await res.json();
 
-            if (res.ok) {
+            if (data && data.code === code) {
                 msg.style.color = "green";
                 msg.innerText = "Kod to'g'ri! Endi parol kiriting.";
                 document.getElementById('step-2').style.display = 'none';
                 document.getElementById('step-3').style.display = 'block';
             } else {
                 msg.style.color = "red";
-                msg.innerText = data.detail || "Kod xato!";
+                msg.innerText = "Kod noto'g'ri!";
             }
         } catch (e) {
             msg.style.color = "red";
@@ -499,9 +498,10 @@
         }
     }
 
-    // 3. Parol o'rnatish va Yakunlash
+    // 3. Parol o'rnatish va Firebase da saqlash
     async function finishRegister() {
         const phone = document.getElementById('reg-phone').value.trim();
+        const cleanPhone = phone.replace('+', '');
         const password = document.getElementById('reg-password').value.trim();
         const msg = document.getElementById('auth-status-msg');
 
@@ -512,12 +512,11 @@
         }
 
         try {
-            const res = await fetch(`${SERVER_URL}/register`, {
-                method: "POST",
+            const res = await fetch(`${DB_URL}/users/${cleanPhone}.json`, {
+                method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ phone, password })
             });
-            const data = await res.json();
 
             if (res.ok) {
                 localStorage.setItem('isLogged', 'true');
@@ -529,17 +528,18 @@
                 }, 800);
             } else {
                 msg.style.color = "red";
-                msg.innerText = data.detail || "Ro'yxatdan o'tishda xatolik!";
+                msg.innerText = "Ro'yxatdan o'tishda xatolik!";
             }
         } catch (e) {
             msg.style.color = "red";
-            msg.innerText = "Server xatosi!";
+            msg.innerText = "Saqlashda xatolik!";
         }
     }
 
-    // 4. Kirish (Login)
+    // 4. Kirish (Firebase orqali Login)
     async function loginUser() {
         const phone = document.getElementById('login-phone').value.trim();
+        const cleanPhone = phone.replace('+', '');
         const password = document.getElementById('login-password').value.trim();
         const msg = document.getElementById('auth-status-msg');
 
@@ -550,14 +550,10 @@
         }
 
         try {
-            const res = await fetch(`${SERVER_URL}/login`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ phone, password })
-            });
+            const res = await fetch(`${DB_URL}/users/${cleanPhone}.json`);
             const data = await res.json();
 
-            if (res.ok) {
+            if (data && data.password === password) {
                 localStorage.setItem('isLogged', 'true');
                 localStorage.setItem('userPhone', phone);
                 msg.style.color = "green";
@@ -567,7 +563,7 @@
                 }, 800);
             } else {
                 msg.style.color = "red";
-                msg.innerText = data.detail || "Raqam yoki parol xato!";
+                msg.innerText = "Raqam yoki parol xato!";
             }
         } catch (e) {
             msg.style.color = "red";
@@ -938,7 +934,7 @@
 
     window.onload = () => {
         changeLang(currentLang);
-        initMap(); // Ilova ochilishi bilan to'g'ridan-to'g'ri xaritan yuklaydi
+        initMap();
     };
 </script>
 
