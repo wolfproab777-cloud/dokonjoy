@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Toshkent Do'konlari va Navigatsiya</title>
     
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
     <!-- Leaflet CSS va JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -138,7 +141,6 @@
         .btn-car { background: #2563eb; }
         .btn-foot { background: #10b981; }
 
-        /* Operator tugmasi */
         .call-operator-btn {
             position: fixed;
             bottom: 25px;
@@ -167,7 +169,6 @@
             100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
         }
 
-        /* Modal oyna umumiy stili */
         .modal {
             position: fixed;
             top: 0; left: 0;
@@ -249,14 +250,12 @@
 </head>
 <body>
 
-<!-- SOZLAMALAR MODAL OYNASI -->
 <div id="settings-modal" class="modal">
     <div class="modal-box">
         <button type="button" class="close-btn" onclick="closeSettings()">✕</button>
         <h3 id="settings-title" style="margin-bottom: 15px;">⚙️ Sozlamalar</h3>
         
         <div id="settings-content">
-            <!-- Tizimga kirilmagan bo'lsa ko'rinadi -->
             <div id="not-logged-in-box">
                 <p style="font-size: 13px; color: #4b5563; margin-bottom: 12px;" id="login-prompt-txt">
                     Tizim imkoniyatlaridan to'liq foydalanish uchun ro'yxatdan o'ting yoki kiring:
@@ -264,7 +263,6 @@
                 <button type="button" class="btn-submit" onclick="openAuthModal()">🔐 SMS orqali Kirish</button>
             </div>
 
-            <!-- Tizimga kirilgan bo'lsa ko'rinadi -->
             <div id="logged-in-box" style="display: none;">
                 <p style="font-size: 14px; color: #059669; font-weight: bold; margin-bottom: 8px;" id="user-status-txt">
                     ✅ Tizimga kirilgansiz
@@ -276,21 +274,18 @@
     </div>
 </div>
 
-<!-- AUTH (SMS BILAN KIRISH) MODAL OYNASI -->
 <div id="login-modal" class="modal">
     <div class="modal-box">
         <button type="button" class="close-btn" onclick="closeAuthModal()">✕</button>
         <h3 style="margin-bottom: 10px;">📱 SMS orqali kirish</h3>
 
         <div class="input-form">
-            <!-- 1-QADAM: Telefon raqam va SMS yuborish -->
             <div id="step-1">
                 <input type="tel" id="reg-phone" value="+998" placeholder="+998901234567" maxlength="13">
                 <div id="recaptcha-container"></div>
                 <button type="button" class="btn-submit" style="margin-top:8px;" onclick="sendSMSCode()">Haqiqiy SMS Yuborish</button>
             </div>
             
-            <!-- 2-QADAM: SMS kodni tasdiqlash -->
             <div id="step-2" style="display:none;">
                 <p style="font-size:12px; color:#4b5563; margin-bottom:6px;">SMS orqali kelgan 6 xonali kodni kiriting:</p>
                 <input type="number" id="reg-code" placeholder="123456" maxlength="6">
@@ -313,7 +308,6 @@
                 <button type="button" class="lang-btn" id="lang-ru" onclick="changeLang('ru')">RU</button>
                 <button type="button" class="lang-btn" id="lang-en" onclick="changeLang('en')">EN</button>
             </div>
-            <!-- Sozlamalar tugmasi -->
             <button type="button" class="settings-btn" onclick="openSettings()">⚙️</button>
         </div>
     </div>
@@ -328,7 +322,6 @@
 
 <div id="map"></div>
 
-<!-- Operatorga qo'ng'iroq qilish tugmasi -->
 <a href="tel:200118035" class="call-operator-btn" title="Operatorga qo'ng'iroq qilish">
     <svg viewBox="0 0 24 24">
         <path d="M6.62 10.79a15.053 15.053 0 006.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
@@ -340,7 +333,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-    // Firebase Konfiguratsiyasi
     const firebaseConfig = {
         apiKey: "AIzaSyD-NgvjVmYlxRHMysVWfA30SArjDiKG83w",
         authDomain: "dokonjoylashuuz.firebaseapp.com",
@@ -351,25 +343,20 @@
         measurementId: "G-REKZHXT75T"
     };
 
-    // Firebase Init
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
     let confirmationResultObj = null;
 
-    // reCAPTCHA obyektini tayyorlash
     window.initRecaptcha = function() {
         if (!window.recaptchaVerifier) {
             window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
                 'size': 'invisible',
-                'callback': (response) => {
-                    // reCAPTCHA muvaffaqiyatli
-                }
+                'callback': (response) => {}
             });
         }
     };
 
-    // HAQIQIY SMS YUBORISH
     window.sendSMSCode = async function() {
         const phone = document.getElementById('reg-phone').value.trim();
         const msg = document.getElementById('auth-status-msg');
@@ -383,10 +370,9 @@
         msg.style.color = "#2563eb";
         msg.innerText = "SMS kod yuborilmoqda, kuting...";
 
-        initRecaptcha();
-        const appVerifier = window.recaptchaVerifier;
-
         try {
+            window.initRecaptcha();
+            const appVerifier = window.recaptchaVerifier;
             const confirmationResult = await signInWithPhoneNumber(auth, phone, appVerifier);
             confirmationResultObj = confirmationResult;
             
@@ -398,7 +384,7 @@
         } catch (error) {
             msg.style.color = "red";
             msg.innerText = "Xatolik: " + error.message;
-            if (window.recaptchaVerifier) {
+            if (window.recaptchaVerifier && typeof grecaptcha !== 'undefined') {
                 window.recaptchaVerifier.render().then(widgetId => {
                     grecaptcha.reset(widgetId);
                 });
@@ -406,7 +392,6 @@
         }
     };
 
-    // SMS KODNI TASDIQLASH VA KIRISH
     window.verifySMSCode = async function() {
         const code = document.getElementById('reg-code').value.trim();
         const phone = document.getElementById('reg-phone').value.trim();
@@ -442,7 +427,12 @@
 </script>
 
 <script>
-    // SOZLAMALAR MODAL FUNKSIYALARI
+    // Telegram WebApp Initsializatsiyasi
+    if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.ready();
+        window.Telegram.WebApp.expand();
+    }
+
     function openSettings() {
         const isLogged = localStorage.getItem('isLogged') === 'true';
         const userPhone = localStorage.getItem('userPhone') || '';
@@ -482,7 +472,6 @@
         closeSettings();
     }
 
-    // TIL SOZLAMALARI
     const dict = {
         uz: {
             statusInit: "📍 Joylashuv aniqlanmoqda...",
@@ -584,7 +573,6 @@
         }
     }
 
-    // MAP AND GLOBALS
     let map = null;
     let userMarker = null;
     let userAccuracyCircle = null;
