@@ -201,35 +201,11 @@
             color: #6b7280;
         }
 
-        .auth-tabs {
-            display: flex;
-            gap: 6px;
-            margin-bottom: 15px;
-            margin-top: 10px;
-        }
-
-        .tab-btn {
-            flex: 1;
-            padding: 8px;
-            background: #f3f4f6;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: bold;
-            cursor: pointer;
-            color: #374151;
-        }
-
-        .tab-btn.active {
-            background: #2563eb;
-            color: white;
-            border-color: #2563eb;
-        }
-
         .input-form {
             display: flex;
             flex-direction: column;
             gap: 10px;
+            margin-top: 10px;
         }
 
         .modal-box input {
@@ -262,6 +238,12 @@
             word-break: break-word;
         }
 
+        #recaptcha-container {
+            margin-top: 8px;
+            display: flex;
+            justify-content: center;
+        }
+
         .leaflet-routing-container { display: none !important; }
     </style>
 </head>
@@ -279,7 +261,7 @@
                 <p style="font-size: 13px; color: #4b5563; margin-bottom: 12px;" id="login-prompt-txt">
                     Tizim imkoniyatlaridan to'liq foydalanish uchun ro'yxatdan o'ting yoki kiring:
                 </p>
-                <button type="button" class="btn-submit" onclick="openAuthModal()">🔐 Ro'yxatdan o'tish / Kirish</button>
+                <button type="button" class="btn-submit" onclick="openAuthModal()">🔐 SMS orqali Kirish</button>
             </div>
 
             <!-- Tizimga kirilgan bo'lsa ko'rinadi -->
@@ -294,44 +276,26 @@
     </div>
 </div>
 
-<!-- AUTH (RO'YXATDAN O'TISH / KIRISH) MODAL OYNASI -->
+<!-- AUTH (SMS BILAN KIRISH) MODAL OYNASI -->
 <div id="login-modal" class="modal">
     <div class="modal-box">
         <button type="button" class="close-btn" onclick="closeAuthModal()">✕</button>
-        
-        <div class="auth-tabs">
-            <button type="button" class="tab-btn active" id="tab-reg-btn" onclick="switchTab('reg')">Ro'yxatdan o'tish</button>
-            <button type="button" class="tab-btn" id="tab-login-btn" onclick="switchTab('login')">Kirish</button>
-        </div>
+        <h3 style="margin-bottom: 10px;">📱 SMS orqali kirish</h3>
 
-        <!-- RO'YXATDAN O'TISH BO'LIMI -->
-        <div id="reg-section" class="input-form">
-            <!-- 1-QADAM: Faqat shu ko'rinadi -->
+        <div class="input-form">
+            <!-- 1-QADAM: Telefon raqam va SMS yuborish -->
             <div id="step-1">
                 <input type="tel" id="reg-phone" value="+998" placeholder="+998901234567" maxlength="13">
-                <button type="button" class="btn-submit" style="margin-top:8px;" onclick="sendCode()">SMS Kod Yuborish</button>
+                <div id="recaptcha-container"></div>
+                <button type="button" class="btn-submit" style="margin-top:8px;" onclick="sendSMSCode()">Haqiqiy SMS Yuborish</button>
             </div>
             
-            <!-- 2-QADAM: Dastlab yashirin -->
+            <!-- 2-QADAM: SMS kodni tasdiqlash -->
             <div id="step-2" style="display:none;">
-                <p id="code-desc" style="font-size:12px; color:#4b5563; margin-bottom:6px;">6 xonali SMS kodni kiriting:</p>
+                <p style="font-size:12px; color:#4b5563; margin-bottom:6px;">SMS orqali kelgan 6 xonali kodni kiriting:</p>
                 <input type="number" id="reg-code" placeholder="123456" maxlength="6">
-                <button type="button" class="btn-submit" style="background:#10b981; margin-top:8px;" onclick="verifyCode()">Kodni Tasdiqlash</button>
+                <button type="button" class="btn-submit" style="background:#10b981; margin-top:8px;" onclick="verifySMSCode()">Kodni Tasdiqlash</button>
             </div>
-
-            <!-- 3-QADAM: Dastlab yashirin -->
-            <div id="step-3" style="display:none;">
-                <p style="font-size:12px; color:#4b5563; margin-bottom:6px;">Yangi parol o'rnating:</p>
-                <input type="password" id="reg-password" placeholder="Parol">
-                <button type="button" class="btn-submit" style="background:#059669; margin-top:8px;" onclick="finishRegister()">Saqlash va Kirish</button>
-            </div>
-        </div>
-
-        <!-- KIRISH BO'LIMI -->
-        <div id="login-section" class="input-form" style="display:none;">
-            <input type="tel" id="login-phone" value="+998" placeholder="+998901234567" maxlength="13">
-            <input type="password" id="login-password" placeholder="Parolingiz">
-            <button type="button" class="btn-submit" onclick="loginUser()">Kirish</button>
         </div>
 
         <p id="auth-status-msg" class="auth-status"></p>
@@ -371,10 +335,113 @@
     </svg>
 </a>
 
-<script>
-    // Firebase Realtime Database URL manzili
-    const DB_URL = "https://dokonjoylashuuz-default-rtdb.firebaseio.com";
+<!-- FIREBASE SDK MODULLARI INTEGRATSIYASI -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
+    // Firebase Konfiguratsiyasi
+    const firebaseConfig = {
+        apiKey: "AIzaSyD-NgvjVmYlxRHMysVWfA30SArjDiKG83w",
+        authDomain: "dokonjoylashuuz.firebaseapp.com",
+        projectId: "dokonjoylashuuz",
+        storageBucket: "dokonjoylashuuz.firebasestorage.app",
+        messagingSenderId: "665334102750",
+        appId: "1:665334102750:web:8667baf5e3fefae465e04f",
+        measurementId: "G-REKZHXT75T"
+    };
+
+    // Firebase Init
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    let confirmationResultObj = null;
+
+    // reCAPTCHA obyektini tayyorlash
+    window.initRecaptcha = function() {
+        if (!window.recaptchaVerifier) {
+            window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+                'size': 'invisible',
+                'callback': (response) => {
+                    // reCAPTCHA muvaffaqiyatli
+                }
+            });
+        }
+    };
+
+    // HAQIQIY SMS YUBORISH
+    window.sendSMSCode = async function() {
+        const phone = document.getElementById('reg-phone').value.trim();
+        const msg = document.getElementById('auth-status-msg');
+
+        if (phone.length < 13 || !phone.startsWith('+998')) {
+            msg.style.color = "red";
+            msg.innerText = "To'g'ri O'zbekiston raqamini kiriting (+998...)";
+            return;
+        }
+
+        msg.style.color = "#2563eb";
+        msg.innerText = "SMS kod yuborilmoqda, kuting...";
+
+        initRecaptcha();
+        const appVerifier = window.recaptchaVerifier;
+
+        try {
+            const confirmationResult = await signInWithPhoneNumber(auth, phone, appVerifier);
+            confirmationResultObj = confirmationResult;
+            
+            msg.style.color = "green";
+            msg.innerText = "Haqiqiy SMS kod telefoningizga yuborildi!";
+            
+            document.getElementById('step-1').style.display = 'none';
+            document.getElementById('step-2').style.display = 'block';
+        } catch (error) {
+            msg.style.color = "red";
+            msg.innerText = "Xatolik: " + error.message;
+            if (window.recaptchaVerifier) {
+                window.recaptchaVerifier.render().then(widgetId => {
+                    grecaptcha.reset(widgetId);
+                });
+            }
+        }
+    };
+
+    // SMS KODNI TASDIQLASH VA KIRISH
+    window.verifySMSCode = async function() {
+        const code = document.getElementById('reg-code').value.trim();
+        const phone = document.getElementById('reg-phone').value.trim();
+        const msg = document.getElementById('auth-status-msg');
+
+        if (!code || code.length < 6) {
+            msg.style.color = "red";
+            msg.innerText = "6 xonali SMS kodni kiriting!";
+            return;
+        }
+
+        msg.style.color = "#2563eb";
+        msg.innerText = "Kod tekshirilmoqda...";
+
+        try {
+            const result = await confirmationResultObj.confirm(code);
+            const user = result.user;
+
+            localStorage.setItem('isLogged', 'true');
+            localStorage.setItem('userPhone', phone);
+
+            msg.style.color = "green";
+            msg.innerText = "Muvaffaqiyatli kirdingiz!";
+            
+            setTimeout(() => {
+                closeAuthModal();
+            }, 800);
+        } catch (error) {
+            msg.style.color = "red";
+            msg.innerText = "SMS kod noto'g'ri kiritildi!";
+        }
+    };
+</script>
+
+<script>
     // SOZLAMALAR MODAL FUNKSIYALARI
     function openSettings() {
         const isLogged = localStorage.getItem('isLogged') === 'true';
@@ -399,7 +466,9 @@
     function openAuthModal() {
         closeSettings();
         document.getElementById('login-modal').style.display = 'flex';
-        switchTab('reg');
+        document.getElementById('step-1').style.display = 'block';
+        document.getElementById('step-2').style.display = 'none';
+        document.getElementById('auth-status-msg').innerText = '';
     }
 
     function closeAuthModal() {
@@ -411,164 +480,6 @@
         localStorage.removeItem('userPhone');
         alert(currentLang === 'ru' ? "Вы вышли из системы" : "Tizimdan chiqdingiz!");
         closeSettings();
-    }
-
-    // AUTH TABLARI
-    function switchTab(type) {
-        document.getElementById('tab-reg-btn').classList.toggle('active', type === 'reg');
-        document.getElementById('tab-login-btn').classList.toggle('active', type === 'login');
-        document.getElementById('reg-section').style.display = type === 'reg' ? 'flex' : 'none';
-        document.getElementById('login-section').style.display = type === 'login' ? 'flex' : 'none';
-        document.getElementById('auth-status-msg').innerText = '';
-
-        if (type === 'reg') {
-            document.getElementById('step-1').style.display = 'block';
-            document.getElementById('step-2').style.display = 'none';
-            document.getElementById('step-3').style.display = 'none';
-        }
-    }
-
-    // 1. SMS Kod Yuborish (Firebase-ga vaqtincha kod saqlaydi)
-    async function sendCode() {
-        const phone = document.getElementById('reg-phone').value.trim();
-        const msg = document.getElementById('auth-status-msg');
-
-        if (phone.length < 13) {
-            msg.style.color = "red";
-            msg.innerText = "Telefon raqamni to'liq kiriting!";
-            return;
-        }
-
-        const cleanPhone = phone.replace('+', '');
-        const generatedCode = "123456"; // Test uchun SMS kod
-
-        msg.style.color = "blue";
-        msg.innerText = "SMS kod yuborilmoqda...";
-
-        try {
-            const res = await fetch(`${DB_URL}/codes/${cleanPhone}.json`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ code: generatedCode, createdAt: Date.now() })
-            });
-
-            if (res.ok) {
-                msg.style.color = "green";
-                msg.innerText = "SMS kod yuborildi! (Test kod: 123456)";
-                document.getElementById('step-1').style.display = 'none';
-                document.getElementById('step-2').style.display = 'block';
-            } else {
-                msg.style.color = "red";
-                msg.innerText = "Firebase ga ulanishda xatolik!";
-            }
-        } catch (e) {
-            msg.style.color = "red";
-            msg.innerText = "Tarmoq xatoligi!";
-        }
-    }
-
-    // 2. Kodni Tekshirish
-    async function verifyCode() {
-        const phone = document.getElementById('reg-phone').value.trim().replace('+', '');
-        const code = document.getElementById('reg-code').value.trim();
-        const msg = document.getElementById('auth-status-msg');
-
-        if (!code || code.length < 6) {
-            msg.style.color = "red";
-            msg.innerText = "6 xonali kodni kiriting!";
-            return;
-        }
-
-        try {
-            const res = await fetch(`${DB_URL}/codes/${phone}.json`);
-            const data = await res.json();
-
-            if (data && data.code === code) {
-                msg.style.color = "green";
-                msg.innerText = "Kod to'g'ri! Endi parol kiriting.";
-                document.getElementById('step-2').style.display = 'none';
-                document.getElementById('step-3').style.display = 'block';
-            } else {
-                msg.style.color = "red";
-                msg.innerText = "Kod noto'g'ri!";
-            }
-        } catch (e) {
-            msg.style.color = "red";
-            msg.innerText = "Xatolik yuz berdi!";
-        }
-    }
-
-    // 3. Parol o'rnatish va Firebase da saqlash
-    async function finishRegister() {
-        const phone = document.getElementById('reg-phone').value.trim();
-        const cleanPhone = phone.replace('+', '');
-        const password = document.getElementById('reg-password').value.trim();
-        const msg = document.getElementById('auth-status-msg');
-
-        if (!password || password.length < 6) {
-            msg.style.color = "red";
-            msg.innerText = "Parol kamida 6 ta belgidan iborat bo'lsin!";
-            return;
-        }
-
-        try {
-            const res = await fetch(`${DB_URL}/users/${cleanPhone}.json`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ phone, password })
-            });
-
-            if (res.ok) {
-                localStorage.setItem('isLogged', 'true');
-                localStorage.setItem('userPhone', phone);
-                msg.style.color = "green";
-                msg.innerText = "Muvaffaqiyatli ro'yxatdan o'tdingiz!";
-                setTimeout(() => {
-                    closeAuthModal();
-                }, 800);
-            } else {
-                msg.style.color = "red";
-                msg.innerText = "Ro'yxatdan o'tishda xatolik!";
-            }
-        } catch (e) {
-            msg.style.color = "red";
-            msg.innerText = "Saqlashda xatolik!";
-        }
-    }
-
-    // 4. Kirish (Firebase orqali Login)
-    async function loginUser() {
-        const phone = document.getElementById('login-phone').value.trim();
-        const cleanPhone = phone.replace('+', '');
-        const password = document.getElementById('login-password').value.trim();
-        const msg = document.getElementById('auth-status-msg');
-
-        if (!phone || !password) {
-            msg.style.color = "red";
-            msg.innerText = "Barcha maydonlarni to'ldiring!";
-            return;
-        }
-
-        try {
-            const res = await fetch(`${DB_URL}/users/${cleanPhone}.json`);
-            const data = await res.json();
-
-            if (data && data.password === password) {
-                localStorage.setItem('isLogged', 'true');
-                localStorage.setItem('userPhone', phone);
-                msg.style.color = "green";
-                msg.innerText = "Muvaffaqiyatli kirdingiz!";
-                setTimeout(() => {
-                    closeAuthModal();
-                }, 800);
-            } else {
-                msg.style.color = "red";
-                msg.innerText = "Raqam yoki parol xato!";
-            }
-        } catch (e) {
-            msg.style.color = "red";
-            msg.innerText = "Server bilan aloqa yo'q!";
-        }
     }
 
     // TIL SOZLAMALARI
