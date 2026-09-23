@@ -244,27 +244,30 @@
 <div id="login-modal">
     <div class="login-box">
         <div class="auth-tabs">
-            <button class="tab-btn active" id="tab-reg-btn" onclick="switchTab('reg')">Ro'yxatdan o'tish</button>
-            <button class="tab-btn" id="tab-login-btn" onclick="switchTab('login')">Kirish</button>
+            <button type="button" class="tab-btn active" id="tab-reg-btn" onclick="switchTab('reg')">Ro'yxatdan o'tish</button>
+            <button type="button" class="tab-btn" id="tab-login-btn" onclick="switchTab('login')">Kirish</button>
         </div>
 
         <!-- RO'YXATDAN O'TISH BO'LIMI -->
         <div id="reg-section" class="input-form">
+            <!-- 1-QADAM: Faqat shu ko'rinadi -->
             <div id="step-1">
                 <input type="tel" id="reg-phone" value="+998" placeholder="+998901234567" maxlength="13">
-                <button class="btn-submit" style="margin-top:8px;" onclick="sendCode()">SMS Kod Yuborish</button>
+                <button type="button" class="btn-submit" style="margin-top:8px;" onclick="sendCode()">SMS Kod Yuborish</button>
             </div>
             
+            <!-- 2-QADAM: Dastlab yashirin -->
             <div id="step-2" style="display:none;">
                 <p id="code-desc" style="font-size:12px; color:#4b5563; margin-bottom:6px;">6 xonali SMS kodni kiriting:</p>
                 <input type="number" id="reg-code" placeholder="123456" maxlength="6">
-                <button class="btn-submit" style="background:#10b981; margin-top:8px;" onclick="verifyCode()">Kodni Tasdiqlash</button>
+                <button type="button" class="btn-submit" style="background:#10b981; margin-top:8px;" onclick="verifyCode()">Kodni Tasdiqlash</button>
             </div>
 
+            <!-- 3-QADAM: Dastlab yashirin -->
             <div id="step-3" style="display:none;">
                 <p style="font-size:12px; color:#4b5563; margin-bottom:6px;">Yangi parol o'rnating:</p>
                 <input type="password" id="reg-password" placeholder="Parol">
-                <button class="btn-submit" style="background:#059669; margin-top:8px;" onclick="finishRegister()">Saqlash va Kirish</button>
+                <button type="button" class="btn-submit" style="background:#059669; margin-top:8px;" onclick="finishRegister()">Saqlash va Kirish</button>
             </div>
         </div>
 
@@ -272,7 +275,7 @@
         <div id="login-section" class="input-form" style="display:none;">
             <input type="tel" id="login-phone" value="+998" placeholder="+998901234567" maxlength="13">
             <input type="password" id="login-password" placeholder="Parolingiz">
-            <button class="btn-submit" onclick="loginUser()">Kirish</button>
+            <button type="button" class="btn-submit" onclick="loginUser()">Kirish</button>
         </div>
 
         <p id="auth-status-msg" class="auth-status"></p>
@@ -285,15 +288,15 @@
             📍 Joylashuv aniqlanmoqda...
         </div>
         <div class="lang-switcher">
-            <button class="lang-btn" id="lang-uz" onclick="changeLang('uz')">UZ</button>
-            <button class="lang-btn" id="lang-ru" onclick="changeLang('ru')">RU</button>
-            <button class="lang-btn" id="lang-en" onclick="changeLang('en')">EN</button>
+            <button type="button" class="lang-btn" id="lang-uz" onclick="changeLang('uz')">UZ</button>
+            <button type="button" class="lang-btn" id="lang-ru" onclick="changeLang('ru')">RU</button>
+            <button type="button" class="lang-btn" id="lang-en" onclick="changeLang('en')">EN</button>
         </div>
     </div>
 
     <div class="controls">
-        <button class="btn-gps" id="btn-gps" onclick="getUserLocation()">🎯 Mening joyim</button>
-        <button class="btn-search" id="btn-search" onclick="loadTashkentShops()">🏪 Do'konlarni yuklash</button>
+        <button type="button" class="btn-gps" id="btn-gps" onclick="getUserLocation()">🎯 Mening joyim</button>
+        <button type="button" class="btn-search" id="btn-search" onclick="loadTashkentShops()">🏪 Do'konlarni yuklash</button>
     </div>
 
     <div id="nearest-info"></div>
@@ -309,14 +312,23 @@
 </a>
 
 <script>
-    const SERVER_URL = "http://localhost:8000/api";
+    // Node.js Express server yoki Render endpoint adresi
+    const SERVER_URL = "/api";
 
+    // Tab va bosqichlarni boshqarish
     function switchTab(type) {
         document.getElementById('tab-reg-btn').classList.toggle('active', type === 'reg');
         document.getElementById('tab-login-btn').classList.toggle('active', type === 'login');
         document.getElementById('reg-section').style.display = type === 'reg' ? 'flex' : 'none';
         document.getElementById('login-section').style.display = type === 'login' ? 'flex' : 'none';
         document.getElementById('auth-status-msg').innerText = '';
+
+        // Har safar Ro'yxatdan o'tish bo'limiga o'tganda 1-qadam qaytariladi
+        if (type === 'reg') {
+            document.getElementById('step-1').style.display = 'block';
+            document.getElementById('step-2').style.display = 'none';
+            document.getElementById('step-3').style.display = 'none';
+        }
     }
 
     // 1. SMS Kod Yuborish
@@ -343,12 +355,14 @@
 
             if (res.ok) {
                 msg.style.color = "green";
-                msg.innerText = "Kod yuborildi! Python konsolini tekshiring.";
+                msg.innerText = "SMS kod yuborildi!";
+                
+                // Faqat javob OK bo'lgandagina 2-qadam ochiladi
                 document.getElementById('step-1').style.display = 'none';
                 document.getElementById('step-2').style.display = 'block';
             } else {
                 msg.style.color = "red";
-                msg.innerText = data.detail;
+                msg.innerText = data.detail || "SMS yuborishda xatolik!";
             }
         } catch (e) {
             msg.style.color = "red";
@@ -362,6 +376,12 @@
         const code = document.getElementById('reg-code').value.trim();
         const msg = document.getElementById('auth-status-msg');
 
+        if (!code || code.length < 6) {
+            msg.style.color = "red";
+            msg.innerText = "6 xonali kodni kiriting!";
+            return;
+        }
+
         try {
             const res = await fetch(`${SERVER_URL}/verify-code`, {
                 method: "POST",
@@ -373,11 +393,13 @@
             if (res.ok) {
                 msg.style.color = "green";
                 msg.innerText = "Kod to'g'ri! Endi parol kiriting.";
+                
+                // Faqat kod tasdiqlanganda 3-qadam ochiladi
                 document.getElementById('step-2').style.display = 'none';
                 document.getElementById('step-3').style.display = 'block';
             } else {
                 msg.style.color = "red";
-                msg.innerText = data.detail;
+                msg.innerText = data.detail || "Kod xato!";
             }
         } catch (e) {
             msg.style.color = "red";
@@ -388,13 +410,12 @@
     // 3. Parol o'rnatish va Ro'yxatdan o'tishni yakunlash
     async function finishRegister() {
         const phone = document.getElementById('reg-phone').value.trim();
-        const code = document.getElementById('reg-code').value.trim();
         const password = document.getElementById('reg-password').value.trim();
         const msg = document.getElementById('auth-status-msg');
 
-        if (!password) {
+        if (!password || password.length < 6) {
             msg.style.color = "red";
-            msg.innerText = "Parol kiriting!";
+            msg.innerText = "Parol kamida 6 ta belgidan iborat bo'lsin!";
             return;
         }
 
@@ -402,7 +423,7 @@
             const res = await fetch(`${SERVER_URL}/register`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ phone, code, password })
+                body: JSON.stringify({ phone, password })
             });
             const data = await res.json();
 
@@ -416,7 +437,7 @@
                 }, 800);
             } else {
                 msg.style.color = "red";
-                msg.innerText = data.detail;
+                msg.innerText = data.detail || "Ro'yxatdan o'tishda xatolik!";
             }
         } catch (e) {
             msg.style.color = "red";
@@ -429,6 +450,12 @@
         const phone = document.getElementById('login-phone').value.trim();
         const password = document.getElementById('login-password').value.trim();
         const msg = document.getElementById('auth-status-msg');
+
+        if (!phone || !password) {
+            msg.style.color = "red";
+            msg.innerText = "Barcha maydonlarni to'ldiring!";
+            return;
+        }
 
         try {
             const res = await fetch(`${SERVER_URL}/login`, {
@@ -448,7 +475,7 @@
                 }, 800);
             } else {
                 msg.style.color = "red";
-                msg.innerText = data.detail;
+                msg.innerText = data.detail || "Raqam yoki parol xato!";
             }
         } catch (e) {
             msg.style.color = "red";
@@ -722,8 +749,8 @@
                         <small>${shopType}</small><br>
                         <b>Masofa:</b> ${dist} m<br>
                         <div class="route-btn-container">
-                            <button class="popup-btn btn-car" onclick="buildRoute(${sLat}, ${sLng}, 'car')">${dict[currentLang].car}</button>
-                            <button class="popup-btn btn-foot" onclick="buildRoute(${sLat}, ${sLng}, 'foot')">${dict[currentLang].foot}</button>
+                            <button type="button" class="popup-btn btn-car" onclick="buildRoute(${sLat}, ${sLng}, 'car')">${dict[currentLang].car}</button>
+                            <button type="button" class="popup-btn btn-foot" onclick="buildRoute(${sLat}, ${sLng}, 'foot')">${dict[currentLang].foot}</button>
                         </div>
                     `);
 
@@ -742,8 +769,8 @@
                     infoEl.innerHTML = `
                         <b>${dict[currentLang].nearestLabel}</b> ${nearestStore.name} (${nearestStore.dist} m)<br>
                         <div class="route-btn-container">
-                            <button class="popup-btn btn-car" onclick="buildRoute(${nearestStore.lat}, ${nearestStore.lng}, 'car')">${dict[currentLang].car}</button>
-                            <button class="popup-btn btn-foot" onclick="buildRoute(${nearestStore.lat}, ${nearestStore.lng}, 'foot')">${dict[currentLang].foot}</button>
+                            <button type="button" class="popup-btn btn-car" onclick="buildRoute(${nearestStore.lat}, ${nearestStore.lng}, 'car')">${dict[currentLang].car}</button>
+                            <button type="button" class="popup-btn btn-foot" onclick="buildRoute(${nearestStore.lat}, ${nearestStore.lng}, 'foot')">${dict[currentLang].foot}</button>
                         </div>
                     `;
                 }
