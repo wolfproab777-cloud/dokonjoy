@@ -1,14 +1,29 @@
 import os
 import random
+import json
 import asyncio
 from aiogram import Bot, Dispatcher, types
 from aiogram.utils import executor
 
-# Token Render Environment variables-dan olinadi
 BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_TELEGRAM_BOT_TOKEN_HERE")
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(bot)
+
+CODES_FILE = "codes.json"
+
+def save_code(phone, code):
+    data = {}
+    if os.path.exists(CODES_FILE):
+        try:
+            with open(CODES_FILE, "r") as f:
+                data = json.load(f)
+        except Exception:
+            data = {}
+    
+    data[phone] = code
+    with open(CODES_FILE, "w") as f:
+        json.dump(data, f)
 
 @dp.message_handler(commands=['start'])
 async def send_welcome(message: types.Message):
@@ -28,6 +43,9 @@ async def process_contact(message: types.Message):
         phone = '+' + phone
 
     code = str(random.randint(100000, 999999))
+    
+    # Сохраняем код для проверки через server.js
+    save_code(phone, code)
 
     await message.answer(
         f"✅ Tasdiqlash kodingiz: <b>{code}</b>\n\nUshbu kodni saytga kiriting.",
@@ -35,5 +53,5 @@ async def process_contact(message: types.Message):
     )
 
 if __name__ == '__main__':
-    print("🤖 Python Telegram-boti muvaffaqiyatli ishga tushdi!")
+    print("🤖 Python Telegram-boti ishga tushdi!")
     executor.start_polling(dp, skip_updates=True)
