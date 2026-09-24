@@ -25,7 +25,6 @@
             --border-color: #d1d5db;
         }
 
-        /* Qorong'i rejim stili */
         body.dark-mode {
             --bg-color: #121212;
             --card-bg: #1e1e1e;
@@ -357,7 +356,6 @@
 <script>
     let tgUser = null;
 
-    // Telegram WebApp SDK integratsiyasi
     if (window.Telegram && window.Telegram.WebApp) {
         const tg = window.Telegram.WebApp;
         tg.ready();
@@ -377,7 +375,6 @@
         }
     }
 
-    // Dark/Light Theme rejimini almashish
     function toggleTheme() {
         document.body.classList.toggle('dark-mode');
         const isDark = document.body.classList.contains('dark-mode');
@@ -390,7 +387,6 @@
         document.getElementById('theme-toggle').innerText = '☀️';
     }
 
-    // Geolokatsiyani Botga Telegram WebApp orqali yuborish
     function sendLocationToBot() {
         if (!userLat || !userLng) {
             alert("Koordinatalar aniqlanmagan!");
@@ -422,14 +418,17 @@
         }
     }
 
-    function verifyTgCode() {
-        const phone = document.getElementById('reg-phone').value.trim();
+    // API ORQALI KODNI TEKSHIRISH
+    async function verifyTgCode() {
+        let phone = document.getElementById('reg-phone').value.trim();
         const code = document.getElementById('reg-code').value.trim();
         const msg = document.getElementById('auth-status-msg');
 
-        if (phone.length < 13 || !phone.startsWith('+998')) {
+        if (!phone.startsWith('+')) phone = '+' + phone;
+
+        if (phone.length < 12) {
             msg.style.color = "red";
-            msg.innerText = "To'g'ri raqam kiriting (+998...)";
+            msg.innerText = "To'g'ri telefon raqam kiriting!";
             return;
         }
 
@@ -439,14 +438,35 @@
             return;
         }
 
-        msg.style.color = "green";
-        msg.innerText = "Kod to'g'ri! Endi parol o'rnating.";
-        document.getElementById('reg-step-1').style.display = 'none';
-        document.getElementById('reg-step-2').style.display = 'block';
+        msg.style.color = "#2563eb";
+        msg.innerText = "Tekshirilmoqda...";
+
+        try {
+            const res = await fetch('/api/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone: phone, code: code })
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                msg.style.color = "green";
+                msg.innerText = "✅ Kod to'g'ri! Endi parol o'rnating.";
+                document.getElementById('reg-step-1').style.display = 'none';
+                document.getElementById('reg-step-2').style.display = 'block';
+            } else {
+                msg.style.color = "red";
+                msg.innerText = data.message || "Kod noto'g'ri yoki raqam ro'yxatdan o'tgan!";
+            }
+        } catch (err) {
+            msg.style.color = "red";
+            msg.innerText = "Server bilan aloqa yo'q! Qaytadan urinib ko'ring.";
+        }
     }
 
     function completeRegistration() {
-        const phone = document.getElementById('reg-phone').value.trim();
+        let phone = document.getElementById('reg-phone').value.trim();
         const password = document.getElementById('reg-password').value.trim();
         const msg = document.getElementById('auth-status-msg');
 
@@ -455,6 +475,8 @@
             msg.innerText = "Parol kamida 4 xonali bo'lsin!";
             return;
         }
+
+        if (!phone.startsWith('+')) phone = '+' + phone;
 
         localStorage.setItem('saved_phone', phone);
         localStorage.setItem('saved_password', password);
@@ -471,9 +493,11 @@
     }
 
     function loginWithPassword() {
-        const phone = document.getElementById('login-phone').value.trim();
+        let phone = document.getElementById('login-phone').value.trim();
         const password = document.getElementById('login-password').value.trim();
         const msg = document.getElementById('auth-status-msg');
+
+        if (!phone.startsWith('+')) phone = '+' + phone;
 
         const savedPhone = localStorage.getItem('saved_phone');
         const savedPass = localStorage.getItem('saved_password');
