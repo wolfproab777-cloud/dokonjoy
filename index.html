@@ -354,6 +354,7 @@
 </a>
 
 <script>
+    const API_BASE_URL = window.location.origin;
     let tgUser = null;
 
     if (window.Telegram && window.Telegram.WebApp) {
@@ -442,7 +443,7 @@
         msg.innerText = "Tekshirilmoqda...";
 
         try {
-            const res = await fetch('/api/verify', {
+            const res = await fetch(`${API_BASE_URL}/api/verify`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ phone: phone, code: code })
@@ -450,14 +451,14 @@
 
             const data = await res.json();
 
-            if (data.success) {
+            if (res.ok && data.success) {
                 msg.style.color = "green";
                 msg.innerText = "✅ Kod to'g'ri! Endi parol o'rnating.";
                 document.getElementById('reg-step-1').style.display = 'none';
                 document.getElementById('reg-step-2').style.display = 'block';
             } else {
                 msg.style.color = "red";
-                msg.innerText = data.message || "Kod noto'g'ri yoki raqam ro'yxatdan o'tgan!";
+                msg.innerText = data.detail || data.message || "Kod noto'g'ri yoki raqam ro'yxatdan o'tgan!";
             }
         } catch (err) {
             msg.style.color = "red";
@@ -465,7 +466,8 @@
         }
     }
 
-    function completeRegistration() {
+    // RO'YXATDAN O'TISHNI YAKUNLASH VA MA'LUMOTLARNI SERVERGA / BOTGA YUBORISH
+    async function completeRegistration() {
         let phone = document.getElementById('reg-phone').value.trim();
         const password = document.getElementById('reg-password').value.trim();
         const msg = document.getElementById('auth-status-msg');
@@ -478,18 +480,39 @@
 
         if (!phone.startsWith('+')) phone = '+' + phone;
 
-        localStorage.setItem('saved_phone', phone);
-        localStorage.setItem('saved_password', password);
-        localStorage.setItem('isLogged', 'true');
-        localStorage.setItem('userPhone', phone);
+        msg.style.color = "#2563eb";
+        msg.innerText = "Saqlanmoqda...";
 
-        msg.style.color = "green";
-        msg.innerText = "Ro'yxatdan muvaffaqiyatli o'tdingiz!";
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone: phone, password: password })
+            });
 
-        setTimeout(() => {
-            closeAuthModal();
-            openSettings();
-        }, 1000);
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                localStorage.setItem('saved_phone', phone);
+                localStorage.setItem('saved_password', password);
+                localStorage.setItem('isLogged', 'true');
+                localStorage.setItem('userPhone', phone);
+
+                msg.style.color = "green";
+                msg.innerText = "✅ Ro'yxatdan o'tdingiz! Ma'lumotlar botga yuborildi.";
+
+                setTimeout(() => {
+                    closeAuthModal();
+                    openSettings();
+                }, 1200);
+            } else {
+                msg.style.color = "red";
+                msg.innerText = data.detail || data.message || "Xatolik yuz berdi!";
+            }
+        } catch (err) {
+            msg.style.color = "red";
+            msg.innerText = "Server bilan aloqa uzildi!";
+        }
     }
 
     function loginWithPassword() {
